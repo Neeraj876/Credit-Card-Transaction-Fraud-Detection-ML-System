@@ -6,6 +6,8 @@ __pycache__/
 # C extensions 
 *.so
 
+*.csv
+
 # Distribution / packaging
 .Python
 build/
@@ -130,3 +132,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+Notebooks/Dataset/fraudTest.csv
