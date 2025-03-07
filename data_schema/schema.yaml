@@ -1,0 +1,72 @@
+columns:
+  - trans_date_trans_time   
+  - cc_num                   
+  - merchant                 
+  - category                 
+  - amt                      
+  - first                    
+  - last                     
+  - gender                   
+  - street                   
+  - city                     
+  - state                    
+  - zip                      
+  - lat                      
+  - long                     
+  - city_pop                 
+  - job                      
+  - dob                      
+  - trans_num                
+  - unix_time                
+  - merch_lat                
+  - merch_long               
+  - is_fraud                               
+
+
+numeric_columns:
+  - cc_num
+  - amt
+  - zip
+  - lat
+  - long
+  - city_pop
+  - unix_time
+  - merch_lat
+  - merch_long
+  - is_fraud
+
+
+categorical_columns:
+  - trans_date_trans_time
+  - merchant
+  - category
+  - first
+  - last
+  - gender
+  - street
+  - city
+  - state
+  - job
+  - dob
+  - trans_num
+
+
+drop_columns:
+  - trans_date_trans_time
+  - cc_num
+  - merchant
+  - first
+  - last
+  - street
+  - zip
+  - trans_num
+  - unix_time
+  - city
+  - lat
+  - long
+  - job
+  - dob
+  - merch_lat
+  - merch_long
+  - trans_date
+  - state

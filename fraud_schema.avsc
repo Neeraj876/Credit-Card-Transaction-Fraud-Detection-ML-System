@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "Transaction",
+  "fields": [
+    { "name": "_id", "type": "string" },  
+    { "name": "Unnamed_0", "type": "int" },
+    { "name": "trans_date_trans_time", "type": "string" },
+    { "name": "cc_num", "type": "long" },
+    { "name": "merchant", "type": "string" },
+    { "name": "category", "type": "string" },
+    { "name": "amt", "type": "float" },
+    { "name": "first", "type": "string" },
+    { "name": "last", "type": "string" },
+    { "name": "gender", "type": "string" },
+    { "name": "street", "type": "string" },
+    { "name": "city", "type": "string" },
+    { "name": "state", "type": "string" },
+    { "name": "zip", "type": "int" }, 
+    { "name": "lat", "type": "double" },
+    { "name": "long", "type": "double" },
+    { "name": "city_pop", "type": "int" },
+    { "name": "job", "type": "string" },
+    { "name": "dob", "type": "string" },
+    { "name": "trans_num", "type": "string" },
+    { "name": "unix_time", "type": "int" },
+    { "name": "merch_lat", "type": "double" },
+    { "name": "merch_long", "type": "double" },
+    { "name": "is_fraud", "type": "int" }
+  ]
+}

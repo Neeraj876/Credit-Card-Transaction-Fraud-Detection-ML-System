@@ -1,0 +1,25 @@
+pandas
+numpy
+setuptools
+kafka-python
+ipykernel
+python-dotenv
+boto3
+pyspark
+mlflow
+scikit-learn
+pymongo[srv]
+pymongo
+scipy
+imblearn
+category_encoders
+feast[postgres]
+confluent_kafka
+httpx
+authlib
+fastavro
+psycopg2
+avro
+
+
+-e .
