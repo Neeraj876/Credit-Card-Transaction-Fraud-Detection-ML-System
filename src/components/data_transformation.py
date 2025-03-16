@@ -16,11 +16,15 @@ from src.utils.main_utils.utils import read_yaml_file, save_numpy_array_data, sa
 from src.constants import *
 
 from imblearn.over_sampling import SMOTE
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, FunctionTransformer, StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from category_encoders import TargetEncoder
+
+# Ensure TargetEncoder outputs numeric values
+# def ensure_numeric(X):
+#     return X.astype(np.float32)
 
 class DataTransformation:
     def __init__(self, data_validation_artifact: DataValidationArtifact, data_transformation_config: DataTransformationConfig):
@@ -47,12 +51,12 @@ class DataTransformation:
         num_pipeline = Pipeline(
             steps=[
             ('imputer', SimpleImputer(strategy='mean')),
-            ('scaler', MinMaxScaler())
+            ('scaler', StandardScaler())
         ])
 
         cat_pipeline = Pipeline(
             steps=[
-            ('imputer', SimpleImputer(strategy='mean')),
+            ('imputer', SimpleImputer(strategy='most_frequent')),
             ('encoder', TargetEncoder())
         ])
 
@@ -63,33 +67,6 @@ class DataTransformation:
         ])
 
         return preprocessor
-    
-    def feature_engineering(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Performs feature engineering on the dataset by adding new features.
-        Args:
-            df (pd.DataFrame): Input dataset.
-        Returns:
-            pd.DataFrame: Transformed dataset with new features.
-        """
-        try:
-            
-            df['trans_date_trans_time'] = pd.to_datetime(df['trans_date_trans_time'])
-            # Extract date and time separately
-            df['trans_date'] = df['trans_date_trans_time'].dt.strftime("%Y-%m-%d")
-            df['trans_date'] = pd.to_datetime(df['trans_date'])
-            df['dob']=pd.to_datetime(df['dob'])
-            df['trans_month'] = pd.DatetimeIndex(df['trans_date']).month
-            df['trans_year'] = pd.DatetimeIndex(df['trans_date']).year
-            # df['latitude_distance'] = abs(round(df['merch_lat'] - df['lat'], 2))
-            # df['longitude_distance'] = abs(round(df['merch_long'] - df['long'], 2))
-            # df['gender'] = df['gender'].replace({'F': 0, 'M': 1}).astype("int64")
-            df["event_timestamp"] = pd.to_datetime(df["trans_date_trans_time"])
-            
-            return df
-        except Exception as e:
-            logging.error(f"Error in feature engineering: {e}")
-            raise CreditCardException(e, sys)
         
     def drop_columns(self, df: pd.DataFrame, cols: list) -> pd.DataFrame:
         """
@@ -120,48 +97,54 @@ class DataTransformation:
             DataTransformationArtifact: Paths to transformed data and preprocessor object.
         """
         try:
-            if not self.data_validation_artifact.validation_status:
-                logging.error("Data Validation failed. Stopping execution.")
-                raise ValueError("Invalid training data. Exiting pipeline.")  # Stop further processing
 
-            train_data_path = self.data_validation_artifact.valid_train_file_path  # Proceed only if valid
-
-            
-            if not self.data_validation_artifact.validation_status:
-                logging.error("Data Validation failed. Stopping execution.")
-                raise ValueError("Invalid testing data. Exiting pipeline.")  # Stop further processing
-
-            test_data_path = self.data_validation_artifact.valid_test_file_path  # Proceed only if valid
-
-
-            train_data = pd.read_csv(train_data_path)
-            test_data = pd.read_csv(test_data_path)
+            train_data = pd.read_csv(self.data_validation_artifact.valid_train_file_path)
+            test_data = pd.read_csv(self.data_validation_artifact.valid_test_file_path)
             logging.info("Read the train and test validated data")
-            
-            train_data = self.feature_engineering(train_data)
-            test_data = self.feature_engineering(test_data)
-            logging.info("Performed feature engineering for train and test data successfully")
 
-            X_train, y_train = train_data.drop(columns=[TARGET_COLUMN]), train_data[TARGET_COLUMN]
-            X_test, y_test = test_data.drop(columns=[TARGET_COLUMN]), test_data[TARGET_COLUMN]
+            # X_train, y_train = train_data.drop(columns=["is_fraud", "transaction_id", "event_timestamp"]), train_data[TARGET_COLUMN]
+            # X_test, y_test = test_data.drop(columns=["is_fraud", "transaction_id", "event_timestamp"]), test_data[TARGET_COLUMN]
+            # print("X_train: ", X_train.head(2))
+            # print("X_test: ", X_train.head(2))
+
+            ## training dataframe
+            X_train = train_data.drop(columns=["is_fraud", "transaction_id", "event_timestamp"],axis=1)
+            y_train = train_data[TARGET_COLUMN]
+            print("X-train: ", X_train)
+            # y_train = y_train.replace(-1, 0).values
+
+            ## testing dataframe
+            X_test = test_data.drop(columns=["is_fraud", "transaction_id", "event_timestamp"],axis=1)
+            y_test = test_data[TARGET_COLUMN]
+            print("y-train: ", y_train)
+            # y_test = y_test.replace(-1, 0).values
 
             num_features = [column for column in X_train.columns if X_train[column].dtype != 'object']
+            print("Numerical: ", num_features)
             cat_features = [column for column in X_train.columns if column not in num_features]
+            print("Categorical", cat_features)
 
             pre_processor = self.get_transformed_pipeline(num_features, cat_features)
             logging.info("Data transformation pipeline created successfully.")
 
-            X_train_processed = pre_processor.fit_transform(X_train, y_train)
-            X_test_processed = pre_processor.transform(X_test)
+            X_train_arr = pre_processor.fit_transform(X_train, y_train).astype(np.float32)
+            X_test_arr = pre_processor.transform(X_test).astype(np.float32)
             logging.info("Fit transformation pipeline to training data and transformation to testing data")
 
+            # train_arr = np.c_[X_train_processed, np.array(y_train)]
+            # test_arr = np.c_[X_test_processed, np.array(y_test)]
+
+            # Debugging: Ensure transformation output is numeric
+            print("X_train_processed dtype:", X_train_arr.dtype)
+            print("X_test_processed dtype:", X_test_arr.dtype)
+
             smote = SMOTE(sampling_strategy="minority")
-            X_train_resampled, y_train_resampled = smote.fit_resample(X_train_processed, y_train)
-            X_test_resampled, y_test_resampled = smote.fit_resample(X_test_processed, y_test)
+            X_train_resampled_arr, y_train_resampled_arr = smote.fit_resample(X_train_arr, np.array(y_train))
             logging.info("Applied SMOTE for class balancing.")
 
-            train_arr = np.c_[X_train_resampled, y_train_resampled]
-            test_arr = np.c_[X_test_resampled, y_test_resampled]
+            # Save transformed data
+            train_arr = np.c_[X_train_resampled_arr, y_train_resampled_arr]
+            test_arr = np.c_[X_test_arr, np.array(y_test)]
 
             os.makedirs(self.data_transformation_config.data_transformation_dir, exist_ok=True)
             save_numpy_array_data(self.data_transformation_config.transformed_train_file_path, array=train_arr)
@@ -176,9 +159,9 @@ class DataTransformation:
 
             logging.info("Data transformation completed successfully.")
             return DataTransformationArtifact(
-                self.data_transformation_config.transformed_train_file_path,
-                self.data_transformation_config.transformed_test_file_path,
-                self.data_transformation_config.transformed_object_file_path
+                transformed_train_file_path=self.data_transformation_config.transformed_train_file_path,
+                transformed_test_file_path=self.data_transformation_config.transformed_test_file_path,
+                transformed_object_file_path=self.data_transformation_config.transformed_object_file_path
             )
 
         except Exception as e:

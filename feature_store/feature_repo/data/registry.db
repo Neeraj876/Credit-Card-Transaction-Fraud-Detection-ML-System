@@ -1,35 +1,0 @@
-
-s
-T
-transaction_idA unique transaction identifier"transaction_idJfraud_detection
-ÕŸ¾€£¬Ÿ•³Ÿ¾¨ç™q
-E
-&
-__dummy"
-__dummy_idJfraud_detection
-ÕŸ¾¾½Ÿ•³Ÿ¾€ÿÍq1"$2c8fc758-fe75-4466-894c-004437e37b6b*•³Ÿ¾àû2ù
-Ø
-fraud_featuresfraud_detectiontransaction_id"
-
-cc_num"
-amt"
-is_fraud"
-trans_month"
-
-trans_year"
-merchant"
-category"
-
-gender"
-city_pop"
-job*
-domainfraud_detection2€£:”event_timestamp*created_timestamp‚ò
-ï{"name": "transaction_batch_source", "query": "SELECT transaction_id, cc_num, amt, is_fraud, trans_month, trans_year, merchant, category, gender, city_pop, job, event_timestamp, created_timestamp FROM public.transactions_raw", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢transaction_batch_source@JÓ	Šfeast.data_source.PushSource¢transaction_push_sourceÒ”event_timestamp*created_timestamp‚ò
-ï{"name": "transaction_batch_source", "query": "SELECT transaction_id, cc_num, amt, is_fraud, trans_month, trans_year, merchant, category, gender, city_pop, job, event_timestamp, created_timestamp FROM public.transactions_raw", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢transaction_batch_sourceb
-transaction_id
-ÕŸ¾Ø­‘ŸÕŸ¾Ø­‘Ÿb¦event_timestamp*created_timestamp‚ò
-ï{"name": "transaction_batch_source", "query": "SELECT transaction_id, cc_num, amt, is_fraud, trans_month, trans_year, merchant, category, gender, city_pop, job, event_timestamp, created_timestamp FROM public.transactions_raw", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢transaction_batch_sourceªfraud_detectionbå	Šfeast.data_source.PushSource¢transaction_push_sourceªfraud_detectionÒ”event_timestamp*created_timestamp‚ò
-ï{"name": "transaction_batch_source", "query": "SELECT transaction_id, cc_num, amt, is_fraud, trans_month, trans_year, merchant, category, gender, city_pop, job, event_timestamp, created_timestamp FROM public.transactions_raw", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢transaction_batch_sourceŠ1
-
-fraud_detection
-ÕŸ¾ Õ³ã”³Ÿ¾ğœÇ‘

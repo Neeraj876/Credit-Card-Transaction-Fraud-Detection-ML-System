@@ -1,72 +1,29 @@
 columns:
-  - trans_date_trans_time   
-  - cc_num                   
-  - merchant                 
-  - category                 
-  - amt                      
-  - first                    
-  - last                     
-  - gender                   
-  - street                   
-  - city                     
-  - state                    
-  - zip                      
-  - lat                      
-  - long                     
-  - city_pop                 
-  - job                      
-  - dob                      
-  - trans_num                
-  - unix_time                
-  - merch_lat                
-  - merch_long               
-  - is_fraud                               
-
+  - transaction_id: int64
+  - event_timestamp: datetime64[ns]
+  - cc_num: int64
+  - merchant: string       
+  - category: string         
+  - amt: float64                        
+  - gender: string             
+  - city_pop: int64           
+  - job: string         
+  - trans_year: int64
+  - trans_month: int64     
+  - is_fraud: int64                     
 
 numeric_columns:
   - cc_num
   - amt
-  - zip
-  - lat
-  - long
   - city_pop
-  - unix_time
-  - merch_lat
-  - merch_long
   - is_fraud
-
+  - trans_year
+  - trans_month
+  - is_fraud
+  - transaction_id
 
 categorical_columns:
-  - trans_date_trans_time
   - merchant
   - category
-  - first
-  - last
   - gender
-  - street
-  - city
-  - state
   - job
-  - dob
-  - trans_num
-
-
-drop_columns:
-  - trans_date_trans_time
-  - cc_num
-  - merchant
-  - first
-  - last
-  - street
-  - zip
-  - trans_num
-  - unix_time
-  - city
-  - lat
-  - long
-  - job
-  - dob
-  - merch_lat
-  - merch_long
-  - trans_date
-  - state

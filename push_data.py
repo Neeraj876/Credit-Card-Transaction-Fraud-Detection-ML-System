@@ -77,7 +77,7 @@ class DataExtract:
 
 if __name__ == "__main__":
     try:
-        FILE_PATH = "Notebooks/Dataset/fraudTest.csv"
+        FILE_PATH = "Notebooks/Dataset/creditCard.csv"
         database = "FRAUD"
         collection = "creditcardData"
 

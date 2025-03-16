@@ -57,17 +57,17 @@ cd /d D:\real_time_streaming
 
 cd D:real_time_streaming
 
-ssh -i "kafka-project.pem" ec2-user@ec2-44-204-24-108.compute-1.amazonaws.com
+ssh -i "kafka-project.pem" ec2-user@ec2-44-203-193-110.compute-1.amazonaws.com
 
-44.204.24.108
+44.203.193.110
 
 Three Kafka topics:
 
-bin/kafka-topics.sh --create --topic raw_transactions --bootstrap-server 44.204.24.108:9092 --replication-factor 1 --partitions 1
+bin/kafka-topics.sh --create --topic raw_transactions --bootstrap-server 44.203.193.110:9092 --replication-factor 1 --partitions 1
 
-bin/kafka-topics.sh --create --topic valid_transactions --bootstrap-server 44.204.24.108:9092 --replication-factor 1 --partitions 1
+bin/kafka-topics.sh --create --topic valid_transactions --bootstrap-server 44.203.193.110:9092 --replication-factor 1 --partitions 1
 
-bin/kafka-topics.sh --create --topic invalid_transactions --bootstrap-server 44.204.24.108:9092 --replication-factor 1 --partitions 1
+bin/kafka-topics.sh --create --topic invalid_transactions --bootstrap-server 44.203.193.110:9092 --replication-factor 1 --partitions 1
 
 How to setup confluent schema registry on AWS EC2:
 
@@ -148,7 +148,7 @@ Example Avro Schema (fraud_schema.avsc)
 Run the following command on your EC2 instance to register your schema:
 
 curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"type\":\"record\",\"name\":\"Transaction\",\"fields\":[{\"name\":\"_id\",\"type\":\"string\"},{\"name\":\"Unnamed_0\",\"type\":\"int\"},{\"name\":\"trans_date_trans_time\",\"type\":\"string\"},{\"name\":\"cc_num\",\"type\":\"long\"},{\"name\":\"merchant\",\"type\":\"string\"},{\"name\":\"category\",\"type\":\"string\"},{\"name\":\"amt\",\"type\":\"float\"},{\"name\":\"first\",\"type\":\"string\"},{\"name\":\"last\",\"type\":\"string\"},{\"name\":\"gender\",\"type\":\"string\"},{\"name\":\"street\",\"type\":\"string\"},{\"name\":\"city\",\"type\":\"string\"},{\"name\":\"state\",\"type\":\"string\"},{\"name\":\"zip\",\"type\":\"int\"},{\"name\":\"lat\",\"type\":\"double\"},{\"name\":\"long\",\"type\":\"double\"},{\"name\":\"city_pop\",\"type\":\"int\"},{\"name\":\"job\",\"type\":\"string\"},{\"name\":\"dob\",\"type\":\"string\"},{\"name\":\"trans_num\",\"type\":\"string\"},{\"name\":\"unix_time\",\"type\":\"int\"},{\"name\":\"merch_lat\",\"type\":\"double\"},{\"name\":\"merch_long\",\"type\":\"double\"},{\"name\":\"is_fraud\",\"type\":\"int\"}]}"}' \
-http://44.204.24.108:8081/subjects/raw_transactions-value/versions
+http://44.203.193.110:8081/subjects/raw_transactions-value/versions
 
 This should return:
 
@@ -172,75 +172,18 @@ This should return:
 
 [1]
 
+# Command to run a fresher redis container and to allow external connections
 
-Input DataFrame Columns: 
-root
- |-- data: struct (nullable = true)
- |    |-- _id: string (nullable = true)
- |    |-- Unnamed_0: integer (nullable = true)
- |    |-- trans_date_trans_time: string (nullable = true)
- |    |-- cc_num: long (nullable = true)
- |    |-- merchant: string (nullable = true)
- |    |-- category: string (nullable = true)
- |    |-- amt: float (nullable = true)
- |    |-- first: string (nullable = true)
- |    |-- last: string (nullable = true)
- |    |-- gender: string (nullable = true)
- |    |-- street: string (nullable = true)
- |    |-- city: string (nullable = true)
- |    |-- state: string (nullable = true)
- |    |-- zip: integer (nullable = true)
- |    |-- lat: double (nullable = true)
- |    |-- long: double (nullable = true)
- |    |-- city_pop: integer (nullable = true)
- |    |-- job: string (nullable = true)
- |    |-- dob: string (nullable = true)
- |    |-- trans_num: string (nullable = true)
- |    |-- unix_time: integer (nullable = true)
- |    |-- merch_lat: double (nullable = true)
- |    |-- merch_long: double (nullable = true)
- |    |-- is_fraud: integer (nullable = true)
+docker run --name redis -p 6379:6379 -d redis --bind 0.0.0.0
 
-Flattened DataFrame Columns:
-root
- |-- _id: string (nullable = true)
- |-- Unnamed_0: integer (nullable = true)
- |-- trans_date_trans_time: string (nullable = true)
- |-- cc_num: long (nullable = true)
- |-- merchant: string (nullable = true)
- |-- category: string (nullable = true)
- |-- amt: float (nullable = true)
- |-- first: string (nullable = true)
- |-- last: string (nullable = true)
- |-- gender: string (nullable = true)
- |-- street: string (nullable = true)
- |-- city: string (nullable = true)
- |-- state: string (nullable = true)
- |-- zip: integer (nullable = true)
- |-- lat: double (nullable = true)
- |-- long: double (nullable = true)
- |-- city_pop: integer (nullable = true)
- |-- job: string (nullable = true)
- |-- dob: string (nullable = true)
- |-- trans_num: string (nullable = true)
- |-- unix_time: integer (nullable = true)
- |-- merch_lat: double (nullable = true)
- |-- merch_long: double (nullable = true)
- |-- is_fraud: integer (nullable = true)
+# Command to test the connection 
 
- Engineered DataFrame Columns:
-root
- |-- cc_num: long (nullable = true)
- |-- merchant: string (nullable = true)
- |-- category: string (nullable = true)
- |-- amt: float (nullable = true)
- |-- gender: string (nullable = true)
- |-- city_pop: integer (nullable = true)
- |-- job: string (nullable = true)
- |-- is_fraud: integer (nullable = true)
- |-- transaction_id: long (nullable = false)
- |-- event_timestamp: timestamp (nullable = true)
- |-- trans_month: integer (nullable = true)
- |-- trans_year: integer (nullable = true)
+redis-cli -h 127.0.0.1 -p 6379 ping
 
+# Command to check fastapi is recieveing request or not from spark
 
+curl -X POST http://127.0.0.1:8000/transaction -H "Content-Type: application/json" -d '{"transaction_id": 77000000}'
+
+# Feast materialize command
+
+feast materialize-incremental $(date -u +"%Y-%m-%dT%H:%M:%S")

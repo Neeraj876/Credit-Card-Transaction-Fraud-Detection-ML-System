@@ -20,6 +20,13 @@ authlib
 fastavro
 psycopg2
 avro
-
+xgboost
+fastapi
+uvicorn
+Jinja2
+streamlit
+requests 
+evidently
+dagshub
 
 -e .

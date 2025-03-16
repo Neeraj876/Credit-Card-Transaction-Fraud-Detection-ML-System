@@ -1,0 +1,52 @@
+amt:
+  drift_detected: &id001 !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - b1
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - '|'
+    - null
+    - null
+    - null
+    - -1
+    - -1
+    - 0
+  - !!binary |
+    AA==
+  p_value: 0.4836056035278775
+category:
+  drift_detected: *id001
+  p_value: 0.17766683566660102
+cc_num:
+  drift_detected: *id001
+  p_value: 0.9797099245464702
+city_pop:
+  drift_detected: *id001
+  p_value: 0.7117397325744336
+event_timestamp:
+  drift_detected: *id001
+  p_value: 0.558640206477631
+gender:
+  drift_detected: *id001
+  p_value: 0.9994143635703945
+is_fraud:
+  drift_detected: *id001
+  p_value: 1.0
+job:
+  drift_detected: *id001
+  p_value: 0.07007406490674539
+merchant:
+  drift_detected: *id001
+  p_value: 0.3599983270681002
+trans_month:
+  drift_detected: *id001
+  p_value: 0.8577264004751747
+trans_year:
+  drift_detected: *id001
+  p_value: 1.0
+transaction_id:
+  drift_detected: *id001
+  p_value: 0.09770164266458192

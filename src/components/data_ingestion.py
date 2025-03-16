@@ -4,18 +4,22 @@ import numpy as np
 import pandas as pd
 import pymongo
 from sklearn.model_selection import train_test_split
-from feast import FeatureStore
 
+from feast import FeatureStore
+import pandas as pd
+import psycopg2
 
 from src.logging.logger import logging
 from src.exception.exception import CreditCardException
-from src.entity.config_entity import DataIngestionConfig
+from src.entity.config_entity import DataIngestionConfig, TrainingPipelineConfig, DataValidationConfig, DataTransformationConfig, ModelTrainingConfig
 from src.entity.artifact_entity import DataIngestionArtifact
 from src.constants import *
 
-# from src.components.data_transformation import DataTransformation
+from src.components.data_validation import DataValidation
 
-# from src.components.model_trainer import ModelTrainer
+from src.components.data_transformation import DataTransformation
+
+from src.components.model_training import ModelTrainer
 
 from dotenv import load_dotenv
 load_dotenv
@@ -29,49 +33,36 @@ class DataIngestion:
         except Exception as e:
             raise CreditCardException(e, sys)
         
-        def advanced_historical_retrieval():
+    def feature_retrieval(self):
             """
-            More flexible historical feature retrieval
+            Retrieve historical features from feast offline store postgres
             """
-            feature_store = FeatureStore(repo_path=".")
+            # Initialize Feature Store
+            store = FeatureStore(repo_path="/mnt/d/real_time_streaming/my_feature_repo/feature_repo")
+
+            # list of features to fetch
+            features = [
+                "creditcard_fraud:cc_num", 
+                "creditcard_fraud:amt", 
+                "creditcard_fraud:merchant", 
+                "creditcard_fraud:category", 
+                "creditcard_fraud:gender", 
+                "creditcard_fraud:job", 
+                "creditcard_fraud:trans_year", 
+                "creditcard_fraud:trans_month", 
+                "creditcard_fraud:is_fraud", 
+                "creditcard_fraud:city_pop"
+            ]
+
+            # Entity DataFrame (PostgreSQL Query)
+            df = store.get_historical_features(
+                features=features, 
+                entity_df="SELECT transaction_id, event_timestamp FROM transactions_raw"
+            ).to_df()
+
+            df.replace({"na":np.nan}, inplace=True)
             
-            # Direct query to PostgreSQL source
-            # This uses the source defined in your PostgreSQL Source configuration
-            historical_features = feature_store.get_historical_features(
-                entity_df=pd.DataFrame({
-                    "transaction_id": [],  # Empty DataFrame allows full source retrieval
-                    "event_timestamp": []
-                }),
-                feature_refs=[
-                    "fraud_features:cc_num",
-                    "fraud_features:amt",
-                    "fraud_features:is_fraud"
-                ]
-            )
-            
-            return historical_features.to_df()
-                
-    # def export_collection_as_dataframe(self):
-    #     """
-    #     Read data from mongodb
-    #     """
-    #     try:
-    #         database_name=self.data_ingestion_config.datbase_name
-    #         collection_name=self.data_ingestion_config.collection_name
-    #         self.mongo_client=pymongo.MongoClient(MONGO_DB_URL)
-    #         collection=self.mongo_client[database_name][collection_name]
-
-    #         print(collection.find().limit(1))
-
-    #         df=pd.DataFrame(list(collection.find))
-    #         if "_id" in df.columns.to_list():
-    #             df=df.drop(columns=["id"], axis=1)
-
-    #         df.replace({'na': np.nan}, inplace=True)
-    #         return df
-        
-    #     except Exception as e:
-    #         raise CreditCardException(e, sys)
+            return df
         
     def export_data_into_feature_store(self, df: pd.DataFrame):
         try:
@@ -92,22 +83,24 @@ class DataIngestion:
 
     def split_data_as_train_test(self, df: pd.DataFrame):
         try:
-            # Step 3: Data cleaning (drop unwanted columns)
-            logging.info("Dropping unnecessary columns if present.")
-            df.drop(columns=['Unnamed: 0'], errors='ignore', inplace=True)
-            df.reset_index(drop=True, inplace=True)
 
             # Step 4: Split dataset into train and test sets
             logging.info("Splitting dataset into train and test sets.")
-            train_data, test_data = train_test_split(df, test_size=DATA_INGESTION_TRAIN_TEST_SPLIT_RATIO, random_state=RANDOM_STATE)
+            train_data, test_data = train_test_split(df, test_size=self.data_ingestion_config.train_test_split_ratio, random_state=RANDOM_STATE)
+
+            logging.info("Performed train test split on the dataframe")
 
             # Step 5: Create necessary directories
             logging.info("Creating directories for saving datasets.")
-            os.makedirs(self.data_ingestion_config.data_ingestion_dir, exist_ok=True)
+            dir_path = os.path.dirname(self.data_ingestion_config.training_file_path)
+            
+            os.makedirs(dir_path, exist_ok=True)
 
             # Step 6: Save datasets
             logging.info("Saving train and test datasets.")
+            
             train_data.to_csv(self.data_ingestion_config.training_file_path, index=False, header=True)
+
             test_data.to_csv(self.data_ingestion_config.testing_file_path, index=False, header=True)
 
             logging.info(f"Exported train and test file path.")
@@ -120,6 +113,8 @@ class DataIngestion:
         try:
             # df=self.export_collection_as_dataframe()
             # print(df.shape)
+
+            df=self.feature_retrieval()
 
             df=self.export_data_into_feature_store(df)
 
@@ -138,6 +133,22 @@ class DataIngestion:
             raise CreditCardException(e, sys)
         
 if __name__=="__main__":
-    pass
+    training_pipeline_config=TrainingPipelineConfig()
+
+    data_ingestion_config=DataIngestionConfig(training_pipeline_config)
+    data_ingestion=DataIngestion(data_ingestion_config)
+    data_ingestion_artifact=data_ingestion.initiate_data_ingestion()
+
+    data_validation_config=DataValidationConfig(training_pipeline_config)
+    data_validation=DataValidation(data_ingestion_artifact, data_validation_config)
+    data_validation_artifact=data_validation.initiate_data_validation()
+
+    data_transformation_config=DataTransformationConfig(training_pipeline_config)
+    data_transformation=DataTransformation(data_validation_artifact, data_transformation_config)
+    data_transformation_artifact=data_transformation.initiate_data_transformation()
+
+    model_trainer_config=ModelTrainingConfig(training_pipeline_config)
+    model_trainer=ModelTrainer(data_transformation_artifact, model_trainer_config)
+    model_trainer_artifact=model_trainer.initiate_model_trainer()
 
         

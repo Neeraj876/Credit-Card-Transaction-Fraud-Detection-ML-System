@@ -84,14 +84,19 @@ def evaluate_models(X_train, y_train, X_test, y_test,models,param):
         for i in range(len(list(models))):
             model = list(models.values())[i]
             para=param[list(models.keys())[i]]
+            
+            # logging.info(f"Param is: {param}")
 
-            gs = GridSearchCV(model,para,cv=3)
+            # Log the current model name being evaluated
+            logging.info(f"Evaluating model: {model}")
+            logging.info(f"Model parameters for {model}: {para}")
+
+            gs = GridSearchCV(model, para, cv=3, n_jobs=-1)
             gs.fit(X_train, y_train)
 
             model.set_params(**gs.best_params_)
+            logging.info(f"Best parameters for {model}: {gs.best_params_}")
             model.fit(X_train,y_train)
-
-            #model.fit(X_train, y_train)  # Train model
 
             y_train_pred = model.predict(X_train)
 
@@ -100,6 +105,8 @@ def evaluate_models(X_train, y_train, X_test, y_test,models,param):
             train_model_score = f1_score(y_train, y_train_pred)
 
             test_model_score = f1_score(y_test, y_test_pred)
+
+            logging.info(f"Model {model} - Train F1 Score: {train_model_score}, Test F1 Score: {test_model_score}")
 
             report[list(models.keys())[i]] = test_model_score
 

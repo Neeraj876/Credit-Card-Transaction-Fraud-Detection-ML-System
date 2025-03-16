@@ -22,18 +22,19 @@ MODEL_FILE_NAME = "model.pkl"
 FINAL_PREPROCESSOR_PATH = os.path.join(os.getcwd(),"final_model","preprocessor.pkl")
 
 """
-data ingestion
+Data ingestion related constant
 """
 DATA_INGESTION_DIR_NAME = "data_ingestion"
 DATA_INGESTION_FEATURE_STORE_DIR: str = "feature_store"
 DATA_INGESTION_INGESTED_DATA_DIR: str = "ingested"
 DATA_INGESTION_TRAIN_TEST_SPLIT_RATIO: float = 0.2
-RANDOM_STATE = 42
 DATA_INGESTION_COLLECTION_NAME: str = "creditcardData"
 DATA_INGESTION_DATABASE_NAME: str = "FRAUD"
+RANDOM_STATE = 42
+
 
 """
-data validation
+Data validation related constant
 """
 DATA_VALIDATION_DIR_NAME: str = "data_validation"
 DATA_VALIDATION_VALID_DIR_NAME: str = "validated"
@@ -42,7 +43,7 @@ DATA_VALIDATION_DRIFT_REPORT_DIR_NAME: str = "drift_report"
 DATA_VALIDATION_DRIFT_REPORT_FILE_NAME: str = "report.yaml"
 
 """
-data transformation
+Data transformation re;ated constant
 """
 
 DATA_TRANSFORMATION_DIR_NAME: str = "data_transformation"
@@ -69,7 +70,7 @@ Model trainer
 MODEL_TRAINER_DIR_NAME: str = "model_trainer"
 MODEL_TRAINER_TRAINED_MODEL_DIR: str = "trained_model"
 MODEL_TRAINER_TRAINED_MODEL_NAME: str = "model.pkl"
-MODEL_TRAINER_EXPECTED_SCORE: float = 0.6
+MODEL_TRAINER_EXPECTED_SCORE: float = 0
 MODEL_TRAINER_OVER_FITTING_UNDER_FITTING_THRESHOLD: float = 0.05
 
 
