@@ -45,7 +45,6 @@ Duplicate the session & enter in a new console --
 cd kafka_2.13-3.9.0
 bin/kafka-console-consumer.sh --topic valid_transactions --bootstrap-server 18.207.219.175:9092
 
-
 Commands to stop zookeeper and kafka server and then res:
 bin/kafka-server-stop.sh
 bin/zookeeper-server-stop.sh
@@ -57,17 +56,17 @@ cd /d D:\real_time_streaming
 
 cd D:real_time_streaming
 
-ssh -i "kafka-project.pem" ec2-user@ec2-44-203-193-110.compute-1.amazonaws.com
+ssh -i "kafka-project.pem" ec2-user@ec2-52-91-199-118.compute-1.amazonaws.com
 
-44.203.193.110
+52.91.199.118
 
 Three Kafka topics:
 
-bin/kafka-topics.sh --create --topic raw_transactions --bootstrap-server 44.203.193.110:9092 --replication-factor 1 --partitions 1
+bin/kafka-topics.sh --create --topic raw_transactions --bootstrap-server 52.91.199.118:9092 --replication-factor 1 --partitions 1
 
-bin/kafka-topics.sh --create --topic valid_transactions --bootstrap-server 44.203.193.110:9092 --replication-factor 1 --partitions 1
+bin/kafka-topics.sh --create --topic valid_transactions --bootstrap-server 52.91.199.118:9092 --replication-factor 1 --partitions 1
 
-bin/kafka-topics.sh --create --topic invalid_transactions --bootstrap-server 44.203.193.110:9092 --replication-factor 1 --partitions 1
+bin/kafka-topics.sh --create --topic invalid_transactions --bootstrap-server 52.91.199.118:9092 --replication-factor 1 --partitions 1
 
 How to setup confluent schema registry on AWS EC2:
 
@@ -148,7 +147,7 @@ Example Avro Schema (fraud_schema.avsc)
 Run the following command on your EC2 instance to register your schema:
 
 curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"type\":\"record\",\"name\":\"Transaction\",\"fields\":[{\"name\":\"_id\",\"type\":\"string\"},{\"name\":\"Unnamed_0\",\"type\":\"int\"},{\"name\":\"trans_date_trans_time\",\"type\":\"string\"},{\"name\":\"cc_num\",\"type\":\"long\"},{\"name\":\"merchant\",\"type\":\"string\"},{\"name\":\"category\",\"type\":\"string\"},{\"name\":\"amt\",\"type\":\"float\"},{\"name\":\"first\",\"type\":\"string\"},{\"name\":\"last\",\"type\":\"string\"},{\"name\":\"gender\",\"type\":\"string\"},{\"name\":\"street\",\"type\":\"string\"},{\"name\":\"city\",\"type\":\"string\"},{\"name\":\"state\",\"type\":\"string\"},{\"name\":\"zip\",\"type\":\"int\"},{\"name\":\"lat\",\"type\":\"double\"},{\"name\":\"long\",\"type\":\"double\"},{\"name\":\"city_pop\",\"type\":\"int\"},{\"name\":\"job\",\"type\":\"string\"},{\"name\":\"dob\",\"type\":\"string\"},{\"name\":\"trans_num\",\"type\":\"string\"},{\"name\":\"unix_time\",\"type\":\"int\"},{\"name\":\"merch_lat\",\"type\":\"double\"},{\"name\":\"merch_long\",\"type\":\"double\"},{\"name\":\"is_fraud\",\"type\":\"int\"}]}"}' \
-http://44.203.193.110:8081/subjects/raw_transactions-value/versions
+http://52.91.199.118:8081/subjects/raw_transactions-value/versions
 
 This should return:
 
@@ -187,3 +186,10 @@ curl -X POST http://127.0.0.1:8000/transaction -H "Content-Type: application/jso
 # Feast materialize command
 
 feast materialize-incremental $(date -u +"%Y-%m-%dT%H:%M:%S")
+
+
+[Stage 80:>                                             /mnt/d/real_time_streaming/venv/lib/python3.12/site-packages/pyspark/sql/pandas/types.py:563: DeprecationWarning: is_datetime64tz_dtype is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.
+  if not is_datetime64tz_dtype(pser.dtype):
+/mnt/d/real_time_streaming/venv/lib/python3.12/site-packages/pyspark/sql/pandas/utils.py:37: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+  if LooseVersion(pandas.__version__) < LooseVersion(minimum_pandas_version):
+                                   [Stage 81:>                                                         (0                                                                   

@@ -371,10 +371,10 @@ async def predict(prediction_request: PredictionRequest):
         if hasattr(model, "predict_proba"):
             fraud_probability = model.predict_proba(preprocessed_features)[:, 1][0]
         else:
-            fraud_probability = model.predict(preprocessed_features)[0]
+            fraud_label = model.predict(preprocessed_features)[0]
         
         # Determine fraud label
-        fraud_label = 1 if fraud_probability >= 0.5 else 0
+        # fraud_label = 1 if fraud_probability >= 0.5 else 0
         
         # Update MongoDB record with prediction if needed
         # collection.update_one(
@@ -385,13 +385,13 @@ async def predict(prediction_request: PredictionRequest):
         #     }}
         # )
 
-        print(f"Transaction ID: {prediction_request.transaction_id}, Fraud Probability: {fraud_probability}, Fraud Label: {fraud_label}")
+        logging.info(f"Transaction ID: {prediction_request.transaction_id}, Fraud Label: {fraud_label}")
 
                 
         return {
             "transaction_id": prediction_request.transaction_id,
-            "fraud_probability": float(fraud_probability),
-            "fraud_label": bool(fraud_label)
+            # "fraud_probability": float(fraud_probability),
+            "fraud_label": int(fraud_label)
         }
     except Exception as e:
         logging.error(f"Prediction error: {str(e)}")

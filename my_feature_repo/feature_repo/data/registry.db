@@ -16,7 +16,7 @@ F
 &
 __dummy"
 __dummy_idJfraud_detection
-ÿª±¾°ÔŒİÿª±¾èÊ—İ1"$acbd50f9-634a-4315-9c48-c9a7a959ef0d*¼¤Ù¾øäÑŠ2ß
+ÿª±¾°ÔŒİÿª±¾èÊ—İ1"$18532d41-6ba9-499d-92a2-3e072a31dc54*¨ŞÙ¾€ß½é2ß
 ¾
 creditcard_fraudmy_feature_repotransaction_id"
 
@@ -34,7 +34,7 @@ trans_year"
 city_pop2€¨û•:çevent_timestamp‚Ø
 Õ{"name": "transaction_batch_source", "query": "SELECT transaction_id, event_timestamp, cc_num, amt, merchant, category, gender, job, trans_year, trans_month, is_fraud, city_pop FROM transactions_raw", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢transaction_batch_source@b
 transaction_id
-ß¨±¾€´ÀËß¨±¾€´ÀË2Ò
+ß¨±¾€´ÀËß¨±¾€´ÀË2¢
 ¾
 creditcard_fraudfraud_detectiontransaction_id"
 
@@ -51,9 +51,8 @@ trans_year"
 is_fraud"
 city_pop2€¨û•:çevent_timestamp‚Ø
 Õ{"name": "transaction_batch_source", "query": "SELECT transaction_id, event_timestamp, cc_num, amt, merchant, category, gender, job, trans_year, trans_month, is_fraud, city_pop FROM transactions_raw", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢transaction_batch_source@b
-transaction_id
-
-ÿª±¾ ŸÚÜ¼¤Ù¾èÀÉˆ
+transaction_idŞ
+ÿª±¾ ŸÚÜ¨ŞÙ¾È‰®ç
 îÂÙ¨ØúıªÆêÔ¾
 ÆêÔ¾¬²Õ¾
 ¬²Õ¾ƒ·Õ¾
@@ -123,7 +122,47 @@ trans_year"
 ÿ’Ù¾‡¡Ù¾
 ö“Ù¾ş¡Ù¾
 î”Ù¾ö¢Ù¾
-ä•Ù¾ì£Ù¾R£
+ä•Ù¾ì£Ù¾
+Ü–Ù¾ä¤Ù¾
+×—Ù¾ß¥Ù¾
+Û˜Ù¾ã¦Ù¾
+Â™Ù¾Ê§Ù¾
+‰¯Ù¾‘½Ù¾
+„°Ù¾Œ¾Ù¾
+ü°Ù¾„¿Ù¾
+ó±Ù¾û¿Ù¾
+î²Ù¾öÀÙ¾
+ä³Ù¾ìÁÙ¾
+Ş´Ù¾æÂÙ¾
+ÖµÙ¾ŞÃÙ¾
+Ô¶Ù¾ÜÄÙ¾
+Ç·Ù¾ÏÅÙ¾
+¿¸Ù¾ÇÆÙ¾
+´¹Ù¾¼ÇÙ¾
+°ºÙ¾¸ÈÙ¾
+¤»Ù¾¬ÉÙ¾
+¼Ù¾¦ÊÙ¾
+—½Ù¾ŸËÙ¾
+¾Ù¾–ÌÙ¾
+‡¿Ù¾ÍÙ¾
+ü¿Ù¾„ÎÙ¾
+öÀÙ¾şÎÙ¾
+îÁÙ¾õÏÙ¾
+ãÂÙ¾ëĞÙ¾
+ŞÃÙ¾æÑÙ¾
+ÖÄÙ¾ŞÒÙ¾
+ÎÅÙ¾ÖÓÙ¾
+ÆÆÙ¾ÎÔÙ¾
+¿ÇÙ¾ÇÕÙ¾
+·ÈÙ¾¿ÖÙ¾
+®ÉÙ¾¶×Ù¾
+§ÊÙ¾¯ØÙ¾
+ŸËÙ¾§ÙÙ¾
+—ÌÙ¾ŸÚÙ¾
+ÍÙ¾–ÛÙ¾
+‡ÎÙ¾ÜÙ¾
+şÎÙ¾†İÙ¾
+øÏÙ¾€ŞÙ¾R£
  
 ,feast.infra.online_stores.sqlite.SqliteTable"p
 L/mnt/d/real_time_streaming/my_feature_repo/feature_repo/data/online_store.db my_feature_repo_creditcard_fraudbùevent_timestamp‚Ø

@@ -3,14 +3,21 @@ import json
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json, to_timestamp, month, year, expr, unix_timestamp, when, current_timestamp
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType, DoubleType, FloatType, TimestampType
-import requests
-
 from src.logging.logger import logging
+from pyspark.sql.functions import abs, expr, monotonically_increasing_id
+
+import requests
+from feast import FeatureStore
+import time
+
+# Initialize Feature Store
+FEAST_REPO_PATH="/mnt/d/real_time_streaming/my_feature_repo/feature_repo"
+FEATURE_VIEW_NAME="creditcard_fraud"
 
 # Configuration
 CONFIG = {
     "kafka": {
-        "broker": "44.203.193.110:9092",
+        "broker": "52.91.199.118:9092",
         "topic": "valid_transactions",
     },
     "storage": {
@@ -86,30 +93,57 @@ def debug_batch(batch_df, batch_id):
     except Exception as e:
         logging.error(f"Error in debug_batch for batch {batch_id}: {str(e)}")
 
-def send_transaction_to_api(transaction_id):
-    """Function to send the transaction_id to the API endpoint"""
-    try:
-        # Prepare the payload
-        payload = {
-            "transaction_id": transaction_id
-        }
+# def send_transaction_to_api(transaction_id):
+#     """Function to send the transaction_id to the API endpoint"""
+#     try:
+#         # Prepare the payload
+#         payload = {
+#             "transaction_id": transaction_id
+#         }
         
-        # Send POST request
-        response = requests.post("http://localhost:8000/transaction", json=payload)
+#         # Send POST request
+#         response = requests.post("http://localhost:8000/transaction", json=payload)
         
-        # Check response status
-        if response.status_code == 200:
-            logging.info(f"Successfully sent transaction_id {transaction_id} to the API")
-        else:
-            logging.error(f"Failed to send transaction_id {transaction_id}. Status Code: {response.status_code}")
-    except Exception as e:
-        logging.error(f"Error sending transaction_id {transaction_id} to API: {str(e)}")
+#         # Check response status
+#         if response.status_code == 200:
+#             logging.info(f"Successfully sent transaction_id {transaction_id} to the API")
+#         else:
+#             logging.error(f"Failed to send transaction_id {transaction_id}. Status Code: {response.status_code}")
+#     except Exception as e:
+#         logging.error(f"Error sending transaction_id {transaction_id} to API: {str(e)}")
 
+# Function to send transaction ID to API with retries
+def send_transaction_to_api(transaction_id, max_retries=3):
+    """Sends transaction_id to API with retries on failure."""
+    payload = {"transaction_id": transaction_id}
+    
+    for attempt in range(max_retries):
+        try:
+            response = requests.post("http://localhost:8000/transaction", json=payload)
+            
+            if response.status_code == 200:
+                logging.info(f"Sent transaction_id {transaction_id} to API successfully.")
+                return True  # Success
+            else:
+                logging.error(f"⚠️ API failed for transaction_id {transaction_id}, Status: {response.status_code}. Retrying...")
+        except Exception as e:
+            logging.error(f"❌ Error sending transaction_id {transaction_id} to API: {str(e)}")
+
+        time.sleep(2)  # Small delay before retry
+    
+    logging.error(f"🚨 API permanently failed for transaction_id {transaction_id} after {max_retries} attempts.")
+    return False  # Failure
+
+# def send_to_api_partition(iterator):
+#     for row in iterator:
+#         transaction_id = row.transaction_id
+#         response = send_transaction_to_api(transaction_id)
+#         logging.info(f"Sent transaction_id {transaction_id}, Response: {response}")
+
+# Function to process Spark partition
 def send_to_api_partition(iterator):
     for row in iterator:
-        transaction_id = row.transaction_id
-        response = send_transaction_to_api(transaction_id)
-        logging.info(f"Sent transaction_id {transaction_id}, Response: {response}")
+        send_transaction_to_api(row.transaction_id)
 
 def write_to_stores(batch_df, epoch_id):
     if batch_df.isEmpty():
@@ -124,7 +158,6 @@ def write_to_stores(batch_df, epoch_id):
         debug_batch(batch_df, epoch_id)
 
         # Create a unique transaction_id using multiple columns
-        from pyspark.sql.functions import abs, expr, monotonically_increasing_id
         
         # Use monotonically_increasing_id() to generate guaranteed unique IDs within this batch
         # Combined with epoch_id to make it unique across batches
@@ -135,8 +168,6 @@ def write_to_stores(batch_df, epoch_id):
         batch_df = batch_df.withColumn("transaction_id", 
            (monotonically_increasing_id() + (epoch_id * 1_000_000)).cast("long")) 
         
-        # In your write_to_stores function:
-
         # Now check if expected columns exist
         required_columns = ["transaction_id", "cc_num", "amt", "is_fraud", "event_timestamp"]
         available_columns = batch_df.columns
@@ -157,21 +188,7 @@ def write_to_stores(batch_df, epoch_id):
             return
         
         try:
-            # final_df = batch_df.select(
-            #     col("transaction_id"),  
-            #     col("cc_num").cast("long"),  
-            #     col("amt").cast("float").alias("amt"),
-            #     col("is_fraud").cast("integer"),
-            #     col("event_timestamp"),
-            #     month(col("event_timestamp")).alias("trans_month").cast("integer"),
-            #     year(col("event_timestamp")).alias("trans_year").cast("integer"),
-            #     col("merchant"),
-            #     col("category"),
-            #     col("gender"),
-            #     col("city_pop").cast("integer"),
-            #     col("job")
-            # )
-
+           
             final_df = batch_df.select(
             col("transaction_id"),  
             col("cc_num").cast("long").alias("cc_num"),
@@ -186,22 +203,7 @@ def write_to_stores(batch_df, epoch_id):
             col("city_pop").cast("long").alias("city_pop"),
             col("job")
             )
-
-            ## Claude
-            # final_df = batch_df.select(
-            # col("transaction_id"),  
-            # col("cc_num").cast("long"),  # Correct for Int64
-            # col("amt").cast("double").alias("amt"),  # Changed from "float" to "double" for Float64
-            # col("is_fraud").cast("long"),  # Changed from "integer" to "long" for Int64
-            # col("event_timestamp"),
-            # month(col("event_timestamp")).alias("trans_month").cast("long"),  # Changed from "integer" to "long"
-            # year(col("event_timestamp")).alias("trans_year").cast("long"),  # Changed from "integer" to "long"
-            # col("merchant"),
-            # col("category"),
-            # col("gender"),
-            # col("city_pop").cast("long"),  # Changed from "integer" to "long"
-            # col("job")
-            # )   
+ 
         except Exception as e:
             logging.error(f"Error during column selection in epoch {epoch_id}: {str(e)}")
             # Show schema for debugging
@@ -225,8 +227,10 @@ def write_to_stores(batch_df, epoch_id):
         #     response = send_transaction_to_api(transaction_id)
         # logging.info(f"Response is: {response}")
         
-        final_df.foreachPartition(send_to_api_partition)
+        # final_df.foreachPartition(send_to_api_partition)
 
+        # Send transactions to API in parallel
+        final_df.select("transaction_id").foreachPartition(send_to_api_partition)
 
         # Write to PostgreSQL (Feast Offline Store)
         try:
@@ -250,19 +254,31 @@ def write_to_stores(batch_df, epoch_id):
 
         # Write to Redis (Feast Online Store) 
         try:
-            logging.info(f"Attempting to write to Redis: {CONFIG['redis']['host']}:{CONFIG['redis']['port']}")
+            # logging.info(f"Attempting to write to Redis: {CONFIG['redis']['host']}:{CONFIG['redis']['port']}")
+            logging.info(f"Attempting to write to Feast Online Store (Redis) via Feast API...")
+
+            # Convert Spark DataFrame to Pandas (Feast requires Pandas)
+            pandas_df = final_df.toPandas()
+
+            # Initialize Feast Feature Store
+            store = FeatureStore(repo_path=FEAST_REPO_PATH)
+
+            # Write features to Feast Online Store (Redis)
+            store.write_to_online_store(FEATURE_VIEW_NAME, pandas_df)
+
+            logging.info(f"Epoch {epoch_id} - Successfully wrote to Feast Online Store (Redis).")
             
-            final_df.write \
-                .format("org.apache.spark.sql.redis") \
-                .option("table", "feast_online_store") \
-                .option("key.column", "transaction_id") \
-                .option("host", CONFIG["redis"]["host"]) \
-                .option("port", CONFIG["redis"]["port"]) \
-                .mode("append") \
-                .save()
-            logging.info(f"Epoch {epoch_id} - Successfully wrote to Redis.")
+            # final_df.write \
+            #     .format("org.apache.spark.sql.redis") \
+            #     .option("table", "feast_online_store") \
+            #     .option("key.column", "transaction_id") \
+            #     .option("host", CONFIG["redis"]["host"]) \
+            #     .option("port", CONFIG["redis"]["port"]) \
+            #     .mode("append") \
+            #     .save()
+            # logging.info(f"Epoch {epoch_id} - Successfully wrote to Redis.")
         except Exception as e:
-            logging.error(f"Error writing to Redis in epoch {epoch_id}: {str(e)}", exc_info=True)
+            logging.error(f"Error writing to Feast Online Store in epoch {epoch_id}: {str(e)}", exc_info=True)
 
     except Exception as e:
         logging.error(f"Error in epoch {epoch_id}: {str(e)}", exc_info=True)

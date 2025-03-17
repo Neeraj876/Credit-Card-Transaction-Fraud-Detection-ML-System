@@ -30,11 +30,12 @@ def create_transaction(transaction_data):
     )
     return response.json()
 
-def predict_fraud(transaction_id, event_timestamp=None):
+# def predict_fraud(transaction_id, event_timestamp=None):
+def predict_fraud(transaction_id):
     """Request fraud prediction for a transaction"""
     request_data = {"transaction_id": transaction_id}
-    if event_timestamp:
-        request_data["event_timestamp"] = event_timestamp
+    # if event_timestamp:
+    #     request_data["event_timestamp"] = event_timestamp
         
     response = requests.post(
         PREDICTION_ENDPOINT,
@@ -127,33 +128,33 @@ def display_results(transaction_response, prediction_response):
     
     with col2:
         st.subheader("Fraud Analysis")
-        fraud_probability = prediction_response["fraud_probability"] * 100
-        st.write(f"Fraud probability: {prediction_response["fraud_probability"] * 100}")
+        # fraud_probability = prediction_response["fraud_probability"] * 100
+        # st.write(f"Fraud probability: {prediction_response["fraud_probability"] * 100}")
         fraud_label = prediction_response["fraud_label"]
         st.write(f"Fraud label: {prediction_response["fraud_label"]}")
         
         # Display fraud probability with gauge chart
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=fraud_probability,
-            title={"text": "Fraud Probability"},
-            domain={"x": [0, 1], "y": [0, 1]},
-            gauge={
-                "axis": {"range": [0, 100]},
-                "bar": {"color": "darkblue"},
-                "steps": [
-                    {"range": [0, 33], "color": "green"},
-                    {"range": [33, 66], "color": "yellow"},
-                    {"range": [66, 100], "color": "red"},
-                ],
-                "threshold": {
-                    "line": {"color": "red", "width": 4},
-                    "thickness": 0.75,
-                    "value": 50,
-                },
-            },
-        ))
-        st.plotly_chart(fig)
+        # fig = go.Figure(go.Indicator(
+        #     mode="gauge+number",
+        #     value=fraud_probability,
+        #     title={"text": "Fraud Probability"},
+        #     domain={"x": [0, 1], "y": [0, 1]},
+        #     gauge={
+        #         "axis": {"range": [0, 100]},
+        #         "bar": {"color": "darkblue"},
+        #         "steps": [
+        #             {"range": [0, 33], "color": "green"},
+        #             {"range": [33, 66], "color": "yellow"},
+        #             {"range": [66, 100], "color": "red"},
+        #         ],
+        #         "threshold": {
+        #             "line": {"color": "red", "width": 4},
+        #             "thickness": 0.75,
+        #             "value": 50,
+        #         },
+        #     },
+        # ))
+        # st.plotly_chart(fig)
         
         # Display fraud label
         if fraud_label:
@@ -161,22 +162,22 @@ def display_results(transaction_response, prediction_response):
         else:
             st.success("✅ TRANSACTION APPEARS LEGITIMATE")
     
-    with col3:
-        st.subheader("Risk Factors")
+    # with col3:
+    #     st.subheader("Risk Factors")
         
-        # Display some common risk factors
-        risk_factors = {
-            "Transaction Amount": prediction_response["fraud_probability"] > 0.7 and "High" or "Normal",
-            "Customer Location": prediction_response["fraud_probability"] > 0.5 and "Suspicious" or "Normal",
-            "Merchant Category": prediction_response["fraud_probability"] > 0.6 and "High Risk" or "Low Risk",
-            "Time of Transaction": prediction_response["fraud_probability"] > 0.4 and "Unusual" or "Normal"
-        }
+    #     # Display some common risk factors
+    #     risk_factors = {
+    #         "Transaction Amount": prediction_response["fraud_probability"] > 0.7 and "High" or "Normal",
+    #         "Customer Location": prediction_response["fraud_probability"] > 0.5 and "Suspicious" or "Normal",
+    #         "Merchant Category": prediction_response["fraud_probability"] > 0.6 and "High Risk" or "Low Risk",
+    #         "Time of Transaction": prediction_response["fraud_probability"] > 0.4 and "Unusual" or "Normal"
+    #     }
         
-        for factor, status in risk_factors.items():
-            if "High" in status or "Suspicious" in status or "Unusual" in status:
-                st.warning(f"{factor}: {status}")
-            else:
-                st.info(f"{factor}: {status}")
+    #     for factor, status in risk_factors.items():
+    #         if "High" in status or "Suspicious" in status or "Unusual" in status:
+    #             st.warning(f"{factor}: {status}")
+    #         else:
+    #             st.info(f"{factor}: {status}")
 
 def display_transaction_history():
     """Display fake transaction history for visualization"""
@@ -188,11 +189,11 @@ def display_transaction_history():
         "Amount": [120.50, 34.95, 550.00, 10.75, 212.46, 125.43, 72.15],
         "Merchant": ["Target", "Starbucks", "Apple", "7-Eleven", "Best Buy", "Amazon", "Uber"],
         "Category": ["shopping", "food_dining", "electronics", "grocery", "electronics", "shopping", "travel"],
-        "Fraud_Probability": [0.02, 0.01, 0.15, 0.03, 0.08, 0.05, 0.02]
+        # "Fraud_Probability": [0.02, 0.01, 0.15, 0.03, 0.08, 0.05, 0.02]
     }
     
     history_df = pd.DataFrame(data)
-    history_df["Fraud_Probability"] = history_df["Fraud_Probability"] * 100
+    # history_df["Fraud_Probability"] = history_df["Fraud_Probability"] * 100
     
     # Create two columns for charts
     col1, col2 = st.columns(2)
@@ -209,24 +210,24 @@ def display_transaction_history():
         )
         st.plotly_chart(fig1)
     
-    with col2:
-        # Scatter plot of fraud probability vs amount
-        fig2 = px.scatter(
-            history_df,
-            x="Amount",
-            y="Fraud_Probability",
-            color="Category",
-            size="Fraud_Probability",
-            hover_data=["Merchant", "Date"],
-            title="Fraud Risk vs Transaction Amount"
-        )
-        fig2.add_shape(
-            type="line",
-            x0=0, y0=50,
-            x1=600, y1=50,
-            line=dict(color="Red", width=2, dash="dash"),
-        )
-        st.plotly_chart(fig2)
+    # with col2:
+    #     # Scatter plot of fraud probability vs amount
+    #     fig2 = px.scatter(
+    #         history_df,
+    #         x="Amount",
+    #         y="Fraud_Probability",
+    #         color="Category",
+    #         size="Fraud_Probability",
+    #         hover_data=["Merchant", "Date"],
+    #         title="Fraud Risk vs Transaction Amount"
+    #     )
+    #     fig2.add_shape(
+    #         type="line",
+    #         x0=0, y0=50,
+    #         x1=600, y1=50,
+    #         line=dict(color="Red", width=2, dash="dash"),
+    #     )
+    #     st.plotly_chart(fig2)
     
     # Show the data table
     st.write("Transaction Details")
@@ -240,10 +241,10 @@ def display_transaction_history():
 def main():
     """Main application function"""
     # App title and introduction
-    st.title("💳 Credit Card Fraud Detection System")
+    st.title("Credit Card Fraud Detection Machine Learning System")
     
     # Simple banner image instead of Lottie animation
-    st.image("https://img.freepik.com/free-vector/gradient-credit-card-verification-illustration_23-2149195907.jpg", width=300)
+    st.image("https://img.freepik.com/free-vector/hand-drawn-flat-design-ransomware-illustration_23-2149373424.jpg?t=st=1742129010~exp=1742132610~hmac=1173f73e5f82078cf082765b7660b18bf0133981f47eec7840263cf65841dc12&w=1380", width=300)
     
     st.markdown("""
     This application demonstrates real-time credit card fraud detection using machine learning.
@@ -268,6 +269,8 @@ def main():
                     time.sleep(1)
                     
                     # Get prediction
+
+                    # Extracting transaction_id 
                     transaction_id = transaction_response["transaction_id"]
                     if transaction_id:
                         prediction_response = predict_fraud(transaction_id)
@@ -298,10 +301,10 @@ def main():
         - MongoDB for transaction storage
         """)
         
-        st.subheader("System Status")
-        col1, col2 = st.columns(2)
-        col1.metric("API Status", "Online", "100%")
-        col2.metric("Model Version", "v5", "Latest")
+        # st.subheader("System Status")
+        # col1, col2 = st.columns(2)
+        # col1.metric("API Status", "Online", "100%")
+        # col2.metric("Model Version", "v5", "Latest")
         
         # Display some fake stats
         st.subheader("System Statistics")
@@ -317,7 +320,6 @@ def main():
         3. View fraud analysis results
         4. Check transaction history tab for trends
         
-        **Note:** Make sure the FastAPI backend is running!
         """)
 
 if __name__ == "__main__":
