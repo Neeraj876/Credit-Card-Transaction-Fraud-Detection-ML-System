@@ -54,12 +54,37 @@ async def lifespan(app: FastAPI):
         # Initialize Feature Store
         store = FeatureStore(repo_path="/mnt/d/real_time_streaming/my_feature_repo/feature_repo")
 
-        # Set up MLflow
-        mlflow.set_tracking_uri("https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow")
+        # # Set up MLflow
+        # mlflow.set_tracking_uri("https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow")
 
-        # Set up MLflow credentials (Use environment variables instead of hardcoding)
-        os.environ["MLFLOW_TRACKING_USERNAME"] = "neerajjj6785"
-        os.environ["MLFLOW_TRACKING_PASSWORD"] = "d4073bd126374347538627d1f4f255bffaae1de0"
+        # # Set up MLflow credentials (Use environment variables instead of hardcoding)
+        # os.environ["MLFLOW_TRACKING_USERNAME"] = "neerajjj6785"
+        # os.environ["MLFLOW_TRACKING_PASSWORD"] = "d4073bd126374347538627d1f4f255bffaae1de0"
+
+        # Your DagsHub token
+        dagshub_token = "9aaf0099824b57a6c52cbc7d476b66f006f9b0f7"
+
+        # Add DagsHub token for authentication
+        if dagshub_token:
+            dagshub.auth.add_app_token(dagshub_token)  # Authentication
+            print("DagsHub token added successfully")
+        else:
+            print("No DagsHub token found, skipping DagsHub initialization")
+
+        # Initialize DagsHub with MLflow integration (this is only called once)
+        dagshub.init(
+            repo_owner='neerajjj6785',
+            repo_name='real-time-credit-card-transaction-fraud-detection-mlops',
+            mlflow=True
+        )
+
+        # Set up MLflow to use the tracking URI from DagsHub
+        mlflow_tracking_uri = "https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow"
+        if mlflow_tracking_uri:
+            mlflow.set_tracking_uri(mlflow_tracking_uri)
+            print(f"Setting MLflow Tracking URI: {mlflow_tracking_uri}")
+        else:
+            print("MLflow tracking URI not found, skipping MLflow setup")
 
         # Load model and preprocessor once at startup
         model_name = "RandomForestClassifier"

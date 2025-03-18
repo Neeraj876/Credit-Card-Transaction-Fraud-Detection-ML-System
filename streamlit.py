@@ -136,7 +136,7 @@ def display_results(transaction_response, prediction_response):
         # fraud_probability = prediction_response["fraud_probability"] * 100
         # st.write(f"Fraud probability: {prediction_response["fraud_probability"] * 100}")
         fraud_label = prediction_response["fraud_label"]
-        st.write(f"Fraud label: {prediction_response["fraud_label"]}")
+        st.write(f"Fraud label: {prediction_response['fraud_label']}")
         
         # Display fraud probability with gauge chart
         # fig = go.Figure(go.Indicator(
