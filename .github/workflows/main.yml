@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Lint code
         run: echo "Linting repository"
@@ -31,10 +31,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -42,7 +42,7 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push FastAPI image
         env:
@@ -80,8 +80,8 @@ jobs:
       - name: Create deployment config
         run: |
           echo "Creating .env file..."
-          mkdir -p $GITHUB_WORKSPACE/config
-          cat > $GITHUB_WORKSPACE/config/.env << EOL
+          mkdir -p ./config
+          cat > ./config/.env << EOL
           ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_FASTAPI=${{ secrets.ECR_REPOSITORY_FASTAPI }}
           ECR_REPOSITORY_STREAMLIT=${{ secrets.ECR_REPOSITORY_STREAMLIT }}
@@ -98,14 +98,14 @@ jobs:
       - name: Verify .env file before upload
         run: |
           echo "Checking .env file contents:"
-          cat $GITHUB_WORKSPACE/config/.env
-          ls -la $GITHUB_WORKSPACE/config/
+          ls -la ./config/
+          cat ./config/.env
 
       - name: Upload .env file
         uses: actions/upload-artifact@v4
         with:
           name: env-file
-          path: $GITHUB_WORKSPACE/config/.env
+          path: ./config/.env
 
   continuous-deployment:
     name: Continuous Deployment
@@ -113,25 +113,25 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Create config directory
-        run: mkdir -p $GITHUB_WORKSPACE/config
+        run: mkdir -p ./config
 
       - name: Download .env file
         uses: actions/download-artifact@v4
         with:
           name: env-file
-          path: $GITHUB_WORKSPACE/config/
+          path: ./config/
 
       - name: Verify downloaded .env file
         run: |
           echo "Checking if .env file is downloaded:"
-          ls -lah $GITHUB_WORKSPACE/config/
-          cat $GITHUB_WORKSPACE/config/.env
+          ls -lah ./config/
+          cat ./config/.env
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -139,13 +139,13 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Deploy with Docker Compose
         run: |
           echo "Loading environment variables..."
           set -a
-          source $GITHUB_WORKSPACE/config/.env
+          source ./config/.env
           set +a
 
           echo "Pulling latest Docker images..."
