@@ -3,7 +3,6 @@ numpy
 setuptools
 ipykernel
 python-dotenv
-boto3
 pyspark
 mlflow
 scikit-learn
@@ -23,7 +22,6 @@ avro
 xgboost
 fastapi
 uvicorn
-Jinja2
 streamlit
 requests 
 evidently
