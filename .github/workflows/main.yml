@@ -80,7 +80,8 @@ jobs:
       - name: Create deployment config
         run: |
           echo "Creating .env file..."
-          cat > .env << EOL
+          mkdir -p $GITHUB_WORKSPACE/config
+          cat > $GITHUB_WORKSPACE/config/.env << EOL
           ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_FASTAPI=${{ secrets.ECR_REPOSITORY_FASTAPI }}
           ECR_REPOSITORY_STREAMLIT=${{ secrets.ECR_REPOSITORY_STREAMLIT }}
@@ -97,13 +98,14 @@ jobs:
       - name: Verify .env file before upload
         run: |
           echo "Checking .env file contents:"
-          cat .env
+          cat $GITHUB_WORKSPACE/config/.env
+          ls -la $GITHUB_WORKSPACE/config/
 
       - name: Upload .env file
         uses: actions/upload-artifact@v4
         with:
           name: env-file
-          path: .env
+          path: $GITHUB_WORKSPACE/config/.env
 
   continuous-deployment:
     name: Continuous Deployment
@@ -113,17 +115,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Create config directory
+        run: mkdir -p $GITHUB_WORKSPACE/config
+
       - name: Download .env file
         uses: actions/download-artifact@v4
         with:
           name: env-file
-          path: $GITHUB_WORKSPACE/
+          path: $GITHUB_WORKSPACE/config/
 
       - name: Verify downloaded .env file
         run: |
           echo "Checking if .env file is downloaded:"
-          ls -lah $GITHUB_WORKSPACE/
-          cat $GITHUB_WORKSPACE/.env
+          ls -lah $GITHUB_WORKSPACE/config/
+          cat $GITHUB_WORKSPACE/config/.env
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -140,7 +145,7 @@ jobs:
         run: |
           echo "Loading environment variables..."
           set -a
-          source $GITHUB_WORKSPACE/.env
+          source $GITHUB_WORKSPACE/config/.env
           set +a
 
           echo "Pulling latest Docker images..."
