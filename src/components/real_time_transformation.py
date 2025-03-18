@@ -119,7 +119,11 @@ def send_transaction_to_api(transaction_id, max_retries=3):
     
     for attempt in range(max_retries):
         try:
-            response = requests.post("http://localhost:8000/transaction", json=payload)
+            # Configuration Before NGINX
+            # response = requests.post("http://localhost:8000/transaction", json=payload)
+
+            # Configuration After NGINX
+            response = requests.post("http://localhost/api", json=payload)
             
             if response.status_code == 200:
                 logging.info(f"Sent transaction_id {transaction_id} to API successfully.")
@@ -296,7 +300,7 @@ def main():
     .appName("FraudDetectionStreaming") \
     .config("spark.jars.packages",
             "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4,redis.clients:jedis:3.7.0") \
-    .config("spark.jars", "/mnt/d/real_time_streaming/spark-redis_2.12-3.5.0.jar,/mnt/d/real_time_streaming/postgresql-42.6.2.jar") \
+    .config("spark.jars", "/mnt/d/real_time_streaming/jars/spark-redis_2.12-3.5.0.jar,/mnt/d/real_time_streaming/jars/postgresql-42.6.2.jar") \
     .config("spark.streaming.stopGracefullyOnShutdown", "true") \
     .getOrCreate()
 

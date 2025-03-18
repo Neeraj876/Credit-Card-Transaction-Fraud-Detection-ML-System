@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
         yield  # Ensure app can still start even if the model loading fails
 
 # app = FastAPI()
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, root_path="/api", openapi_url="/openapi.json", docs_url="/docs",  redoc_url="/redoc")
 origins = ["*"]
 
 app.add_middleware(

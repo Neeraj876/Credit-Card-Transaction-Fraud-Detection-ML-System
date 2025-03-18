@@ -9,6 +9,9 @@ __pycache__/
 *.csv
 *.txt
 
+# But track requirements.txt
+!requirements.txt
+
 # Distribution / packaging
 .Python
 build/

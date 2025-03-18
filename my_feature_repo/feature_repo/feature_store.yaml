@@ -1,21 +1,41 @@
 project: fraud_detection
-registry: data/registry.db  # SQLite for registry (optional)
+registry: data/registry.db
 provider: local
 
-# Redis Online Store (for low-latency feature serving)
 online_store:
   type: redis
-  connection_string: "localhost:6379"
-  key_ttl_seconds: 86400  # Optional: Set TTL for Redis keys (default: no expiration)
+  connection_string: "redis:6379"
+  key_ttl_seconds: 86400
 
-# PostgreSQL Offline Store (for historical data/feature calculation)
 offline_store:
   type: postgres
-  host: localhost
+  host: postgres
   port: 5432
   database: feast_db
   user: postgres
   password: neeraj
-  db_schema: public  # Explicitly specify schema to avoid issues
+  db_schema: public
 
 entity_key_serialization_version: 2
+
+# project: fraud_detection
+# registry: data/registry.db  # SQLite for registry (optional)
+# provider: local
+
+# # Redis Online Store (for low-latency feature serving)
+# online_store:
+#   type: redis
+#   connection_string: "localhost:6379"
+#   key_ttl_seconds: 86400  # Optional: Set TTL for Redis keys (default: no expiration)
+
+# # PostgreSQL Offline Store (for historical data/feature calculation)
+# offline_store:
+#   type: postgres
+#   host: localhost
+#   port: 5432
+#   database: feast_db
+#   user: postgres
+#   password: neeraj
+#   db_schema: public  # Explicitly specify schema to avoid issues
+
+# entity_key_serialization_version: 2

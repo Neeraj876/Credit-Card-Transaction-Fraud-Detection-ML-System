@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  fastapi:
+    build: 
+      context: .
+      dockerfile: Dockerfile.fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow
+      - MLFLOW_TRACKING_USERNAME=neerajjj6785
+      - MLFLOW_TRACKING_PASSWORD=d4073bd126374347538627d1f4f255bffaae1de0
+      - FEAST_URL=http://localhost:6566
+      - MONGO_URI=mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+
+    depends_on:
+      - redis
+      - postgres
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    ports:
+      - "8501:8501"
+    depends_on:
+      - fastapi
+
+  nginx:
+    build: 
+      context: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - fastapi
+      - streamlit
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=neeraj
+      - POSTGRES_DB=feast_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  redis_data:
+  postgres_data:

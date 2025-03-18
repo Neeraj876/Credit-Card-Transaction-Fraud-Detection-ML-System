@@ -8,14 +8,19 @@ import time
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Configuration
-API_ENDPOINT = "http://localhost:8000"
+# Configuration Before NGINX
+# API_ENDPOINT = "http://localhost:8000"
+# TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
+# PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
+
+# Configuration After NGINX
+API_ENDPOINT = "http://localhost/api"
 TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
 PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
 
 # Set page config
 st.set_page_config(
-    page_title="Credit Card Fraud Detection",
+    page_title="Credit Card Transaction Fraud Detection",
     page_icon="💳",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -241,7 +246,7 @@ def display_transaction_history():
 def main():
     """Main application function"""
     # App title and introduction
-    st.title("Credit Card Fraud Detection Machine Learning System")
+    st.title("Credit Card Transaction Fraud Detection Machine Learning System")
     
     # Simple banner image instead of Lottie animation
     st.image("https://img.freepik.com/free-vector/hand-drawn-flat-design-ransomware-illustration_23-2149373424.jpg?t=st=1742129010~exp=1742132610~hmac=1173f73e5f82078cf082765b7660b18bf0133981f47eec7840263cf65841dc12&w=1380", width=300)
