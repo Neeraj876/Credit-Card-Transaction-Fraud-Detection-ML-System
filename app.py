@@ -62,34 +62,36 @@ async def lifespan(app: FastAPI):
         # os.environ["MLFLOW_TRACKING_PASSWORD"] = "d4073bd126374347538627d1f4f255bffaae1de0"
 
         # Your DagsHub token
-        dagshub_token = "9aaf0099824b57a6c52cbc7d476b66f006f9b0f7"
+        # dagshub_token = "9aaf0099824b57a6c52cbc7d476b66f006f9b0f7"
 
-        # Add DagsHub token for authentication
-        if dagshub_token:
-            dagshub.auth.add_app_token(dagshub_token)  # Authentication
-            print("DagsHub token added successfully")
-        else:
-            print("No DagsHub token found, skipping DagsHub initialization")
+        # # Add DagsHub token for authentication
+        # if dagshub_token:
+        #     dagshub.auth.add_app_token(dagshub_token)  # Authentication
+        #     print("DagsHub token added successfully")
+        # else:
+        #     print("No DagsHub token found, skipping DagsHub initialization")
 
-        # Initialize DagsHub with MLflow integration (this is only called once)
-        dagshub.init(
-            repo_owner='neerajjj6785',
-            repo_name='real-time-credit-card-transaction-fraud-detection-mlops',
-            mlflow=True
-        )
+        # # Initialize DagsHub with MLflow integration (this is only called once)
+        # dagshub.init(
+        #     repo_owner='neerajjj6785',
+        #     repo_name='real-time-credit-card-transaction-fraud-detection-mlops',
+        #     mlflow=True
+        # )
 
-        # Set up MLflow to use the tracking URI from DagsHub
-        mlflow_tracking_uri = "https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow"
-        if mlflow_tracking_uri:
-            mlflow.set_tracking_uri(mlflow_tracking_uri)
-            print(f"Setting MLflow Tracking URI: {mlflow_tracking_uri}")
-        else:
-            print("MLflow tracking URI not found, skipping MLflow setup")
+        # # Set up MLflow to use the tracking URI from DagsHub
+        # mlflow_tracking_uri = "https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow"
+        # if mlflow_tracking_uri:
+        #     mlflow.set_tracking_uri(mlflow_tracking_uri)
+        #     print(f"Setting MLflow Tracking URI: {mlflow_tracking_uri}")
+        # else:
+        #     print("MLflow tracking URI not found, skipping MLflow setup")
 
-        # Load model and preprocessor once at startup
-        model_name = "RandomForestClassifier"
-        version_number = 5
-        model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{version_number}")
+        # # Load model and preprocessor once at startup
+        # model_name = "RandomForestClassifier"
+        # version_number = 5
+        # model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{version_number}")
+
+        model = load_object("final_model/model.pkl")
         preprocessor = load_object("final_model/preprocessor.pkl")
 
         logging.info("Model and preprocessor loaded successfully")

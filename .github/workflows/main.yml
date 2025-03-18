@@ -85,8 +85,6 @@ jobs:
           echo "ECR_REPOSITORY_STREAMLIT=${{ secrets.ECR_REPOSITORY_STREAMLIT }}" >> env-file.txt
           echo "ECR_REPOSITORY_NGINX=${{ secrets.ECR_REPOSITORY_NGINX }}" >> env-file.txt
           echo "IMAGE_TAG=${{ github.sha }}" >> env-file.txt
-          echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> env-file.txt
-          echo "DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }}" >> env-file.txt
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> env-file.txt
           echo "FEAST_URL=${{ secrets.FEAST_URL }}" >> env-file.txt
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> env-file.txt
