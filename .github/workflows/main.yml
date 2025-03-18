@@ -112,6 +112,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: env-file
+          path: .
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
