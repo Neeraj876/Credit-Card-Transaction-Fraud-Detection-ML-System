@@ -1,33 +1,32 @@
-FROM python:3.10-slim-buster
+FROM python:3.9-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install only required system dependencies
-RUN apt update -y && apt install -y libpq-dev
+# Install required system dependencies
+RUN apt update -y && apt install -y \
+    gcc \
+    libpq-dev \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Copy requirements file first (to optimize Docker layer caching)
+# Copy requirements file first (optimizing Docker caching)
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copy the rest of the application files
 COPY . .
 
-# Expose the FastAPI port
-EXPOSE 8000
+# Ensure Streamlit script is executable
+RUN chmod +x streamlit_app.py
 
-# Run the FastAPI app
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose the Streamlit port
+EXPOSE 8501
 
-# FROM python:3.9-slim
-# WORKDIR /app
-# COPY requirements.txt .
-# RUN pip install --no-cache-dir -r requirements.txt
-# COPY . .
-# EXPOSE 8000
-# CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run Streamlit app
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
