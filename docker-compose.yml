@@ -11,7 +11,8 @@ services:
       - MLFLOW_TRACKING_URI=https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow
       - MLFLOW_TRACKING_USERNAME=neerajjj6785
       - MLFLOW_TRACKING_PASSWORD=d4073bd126374347538627d1f4f255bffaae1de0
-      - FEAST_URL=http://localhost:6566
+      - FEAST_URL=http://host.docker.internal:6566
+      - REDIS_URL=redis://redis:6379
       - MONGO_URI=mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 
     depends_on:

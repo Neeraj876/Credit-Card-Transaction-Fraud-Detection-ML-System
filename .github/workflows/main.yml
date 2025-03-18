@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI/CD Pipeline
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
       - name: Run unit tests
         run: echo "Running unit tests"
 
-  build-and-push-ecr-image:
+  build-and-push-ecr-images:
     name: Continuous Delivery
     needs: integration
     runs-on: ubuntu-latest
@@ -33,16 +33,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Debug Directory Structure
-        run: |
-          echo "Current Directory: $(pwd)"
-          ls -R
-
-      - name: Install Utilities
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq unzip
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -54,27 +44,74 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
+      - name: Build, tag, and push FastAPI image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG: latest
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_FASTAPI }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build a docker container and
-          # push it to ECR so that it can
-          # be deployed to ECS.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile.fastapi .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-  Continuous-Deployment:
-    needs: build-and-push-ecr-image
+      - name: Build, tag, and push Streamlit image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_STREAMLIT }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile.streamlit .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Build, tag, and push Nginx image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NGINX }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./nginx
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Create deployment config
+        run: |
+          cat > .env << EOL
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY_FASTAPI=${{ secrets.ECR_REPOSITORY_FASTAPI }}
+          ECR_REPOSITORY_STREAMLIT=${{ secrets.ECR_REPOSITORY_STREAMLIT }}
+          ECR_REPOSITORY_NGINX=${{ secrets.ECR_REPOSITORY_NGINX }}
+          IMAGE_TAG=${{ github.sha }}
+          MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME=${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD=${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          FEAST_URL=${{ secrets.FEAST_URL }} 
+          REDIS_URL=${{ secrets.Redis_URL }} 
+          EOL
+      
+      - name: Upload .env file
+        uses: actions/upload-artifact@v3
+        with:
+          name: env-file
+          path: .env
+
+  continuous-deployment:
+    name: Continuous Deployment
+    needs: build-and-push-ecr-images
     runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Download .env file
+        uses: actions/download-artifact@v3
+        with:
+          name: env-file
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -86,15 +123,18 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Pull latest images
+      - name: Deploy with Docker Compose
         run: |
-          docker pull ${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
-      - name: Run Docker Image
-        run: |
-          docker run -d -p 80:8080 --name=networksecurity -e 'MONGO_DB_URL=${{ secrets.MONGO_DB_URL }}' -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' -e 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' -e 'AWS_REGION=${{ secrets.AWS_REGION }}'  ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
-      - name: Clean previous images and containers
-        run: |
+          # Load environment variables
+          set -a
+          source .env
+          set +a
+          
+          # Pull the latest images
+          docker-compose pull fastapi streamlit nginx
+          
+          # Start all services
+          docker-compose up -d
+          
+          # Clean up unused resources
           docker system prune -f
-          
-          
-            
