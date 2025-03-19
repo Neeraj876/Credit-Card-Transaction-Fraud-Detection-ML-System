@@ -1,1 +1,1 @@
-Real time project
+Real time MLOps project
