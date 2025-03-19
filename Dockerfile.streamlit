@@ -3,8 +3,14 @@ FROM python:3.10-slim-buster
 # Set working directory
 WORKDIR /app
 
+# Install necessary system dependencies
+RUN apt update -y && apt install -y \
+    libpq-dev gcc python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy and install dependencies
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
