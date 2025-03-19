@@ -28,4 +28,4 @@ requests
 evidently
 boto3
 
--e .
+# -e .
