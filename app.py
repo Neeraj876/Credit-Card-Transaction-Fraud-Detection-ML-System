@@ -34,6 +34,7 @@ load_dotenv()
 # Certificate for MongoDB connection
 ca = certifi.where()
 
+
 # Connect to MongoDB
 MONGO_DB_URL = os.getenv("MONGO_DB_URL")
 mongo_client = pymongo.MongoClient(MONGO_DB_URL, tlsCAFile=ca)
