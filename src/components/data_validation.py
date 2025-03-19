@@ -17,6 +17,7 @@ from scipy.stats import ks_2samp
 from evidently.report import Report
 from evidently.metrics import DataDriftTable
 
+# os.environ["MLFLOW_TRACKING_URI"]="http://ec2-34-207-207-10.compute-1.amazonaws.com:5000/"
 
 class DataValidation:
     def __init__(self, data_ingestion_artifact:DataIngestionArtifact, 
@@ -137,7 +138,7 @@ class DataValidation:
                 }
 
                 # Log KS Test results in MLflow
-                # mlflow.log_metric(f"{phase}_ks_test_p_value_{column}", p_value)
+                mlflow.log_metric(f"{phase}_ks_test_p_value_{column}", p_value)
 
             drift_report_file_path = self.data_validation_config.drift_report_file_path
 
@@ -153,40 +154,40 @@ class DataValidation:
             drift_report_file = f"{phase}_drift_report.yaml"
             with open(drift_report_file, "w") as f:
                 yaml.dump(report, f)
-            # mlflow.log_artifact(drift_report_file, artifact_path="drift_reports")
+            mlflow.log_artifact(drift_report_file, artifact_path="drift_reports")
 
             logging.info(f"Generating Evidently AI Data Drift Report for {phase} data...")
 
             # Generate Evidently AI Data Drift Report
-            drift_report = Report(metrics=[DataDriftTable()])
-            drift_report.run(reference_data=base_df, current_data=current_df)
+            # drift_report = Report(metrics=[DataDriftTable()])
+            # drift_report.run(reference_data=base_df, current_data=current_df)
 
-            # Save and log the Evidently drift report
-            dir_path = os.path.dirname(drift_report_file_path)
-            os.makedirs(dir_path, exist_ok=True)
+            # # Save and log the Evidently drift report
+            # dir_path = os.path.dirname(drift_report_file_path)
+            # os.makedirs(dir_path, exist_ok=True)
 
-            # Define HTML file path in the same directory
-            drift_report_html_path = os.path.join(dir_path, f"{phase}_evidently_drift_report.html")
+            # # Define HTML file path in the same directory
+            # drift_report_html_path = os.path.join(dir_path, f"{phase}_evidently_drift_report.html")
 
-            # Save the report
-            drift_report.save_html(drift_report_html_path)
-            print(f"Drift report saved at: {drift_report_html_path}")
+            # # Save the report
+            # drift_report.save_html(drift_report_html_path)
+            # print(f"Drift report saved at: {drift_report_html_path}")
 
-            # Log to mlflow
+            # # Log to mlflow
             # mlflow.log_artifact(drift_report_html_path, artifact_path="drift_reports")
 
-            # Log dataset drift metric
-            drift_score = drift_report.as_dict()["metrics"][0]["result"]["dataset_drift"]
+            # # Log dataset drift metric
+            # drift_score = drift_report.as_dict()["metrics"][0]["result"]["dataset_drift"]
             # mlflow.log_metric(f"{phase}_dataset_drift", drift_score)
-            logging.info(f"Dataset drift score ({phase}): {drift_score}")
+            # logging.info(f"Dataset drift score ({phase}): {drift_score}")
 
-            # Raise alert if drift is too high
-            DRIFT_THRESHOLD = 0.05
-            if drift_score > DRIFT_THRESHOLD:
-                if phase == "training":
-                    logging.warning("🚨 High Data Drift Detected in Training! Consider retraining the model.")
-                else:
-                    logging.warning("🚨 Real-Time Data Drift Detected! Investigate the incoming data.")
+            # # Raise alert if drift is too high
+            # DRIFT_THRESHOLD = 0.05
+            # if drift_score > DRIFT_THRESHOLD:
+            #     if phase == "training":
+            #         logging.warning("🚨 High Data Drift Detected in Training! Consider retraining the model.")
+            #     else:
+            #         logging.warning("🚨 Real-Time Data Drift Detected! Investigate the incoming data.")
 
             return status
 

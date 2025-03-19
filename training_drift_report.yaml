@@ -16,37 +16,37 @@ amt:
     - 0
   - !!binary |
     AA==
-  p_value: 0.4836056035278775
+  p_value: 0.2245301041167067
 category:
   drift_detected: *id001
-  p_value: 0.17766683566660102
+  p_value: 0.6835720558303379
 cc_num:
   drift_detected: *id001
-  p_value: 0.9797099245464702
+  p_value: 0.8809044930771214
 city_pop:
   drift_detected: *id001
-  p_value: 0.7117397325744336
+  p_value: 0.10126772715912702
 event_timestamp:
   drift_detected: *id001
-  p_value: 0.558640206477631
+  p_value: 0.2896582108359832
 gender:
   drift_detected: *id001
-  p_value: 0.9994143635703945
+  p_value: 0.9999999999999312
 is_fraud:
   drift_detected: *id001
   p_value: 1.0
 job:
   drift_detected: *id001
-  p_value: 0.07007406490674539
+  p_value: 0.6337914967903655
 merchant:
   drift_detected: *id001
-  p_value: 0.3599983270681002
+  p_value: 0.4019588639967644
 trans_month:
   drift_detected: *id001
-  p_value: 0.8577264004751747
+  p_value: 1.0
 trans_year:
   drift_detected: *id001
   p_value: 1.0
 transaction_id:
   drift_detected: *id001
-  p_value: 0.09770164266458192
+  p_value: 0.2996267695277208

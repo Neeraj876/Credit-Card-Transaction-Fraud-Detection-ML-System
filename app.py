@@ -1,6 +1,5 @@
 import sys
 import os
-# import dagshub
 import mlflow
 import numpy as np
 from mlflow.tracking import MlflowClient
@@ -24,8 +23,8 @@ import pandas as pd
 import pymongo
 import certifi
 
+from mlflow.tracking import MlflowClient
 from typing import Union
-
 
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -41,6 +40,10 @@ mongo_client = pymongo.MongoClient(MONGO_DB_URL, tlsCAFile=ca)
 db = mongo_client["FRAUD"]
 collection = db["creditcardData"]
 
+# Set MLflow tracking URI from environment variable
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+os.environ["MLFLOW_TRACKING_URI"] = MLFLOW_TRACKING_URI
+
 # Global variables for model and preprocessor
 model = None
 preprocessor = None
@@ -52,47 +55,33 @@ async def lifespan(app: FastAPI):
 
     try:
         # Initialize Feature Store
-        store = FeatureStore(repo_path="/mnt/d/real_time_streaming/my_feature_repo/feature_repo")
+        # store = FeatureStore(repo_path="/mnt/d/real_time_streaming/my_feature_repo/feature_repo")
 
-        # # Set up MLflow
-        # mlflow.set_tracking_uri("https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow")
+        # Initialize Feature Store
+        FEATURE_REPO_PATH = os.getenv("FEATURE_REPO_PATH")
+        store = FeatureStore(repo_path=FEATURE_REPO_PATH)
+        logging.info(f"Feature store initialized with repo path: {FEATURE_REPO_PATH}")
 
-        # # Set up MLflow credentials (Use environment variables instead of hardcoding)
-        # os.environ["MLFLOW_TRACKING_USERNAME"] = "neerajjj6785"
-        # os.environ["MLFLOW_TRACKING_PASSWORD"] = "d4073bd126374347538627d1f4f255bffaae1de0"
 
-        # Your DagsHub token
-        # dagshub_token = "9aaf0099824b57a6c52cbc7d476b66f006f9b0f7"
+        # Configure MLflow to use EC2-hosted tracking server
+        remote_tracking_uri = "http://ec2-34-207-207-10.compute-1.amazonaws.com:5000"
+        mlflow.set_tracking_uri(remote_tracking_uri)
+        logging.info(f"MLflow Tracking URI set to: {remote_tracking_uri}")
 
-        # # Add DagsHub token for authentication
-        # if dagshub_token:
-        #     dagshub.auth.add_app_token(dagshub_token)  # Authentication
-        #     print("DagsHub token added successfully")
-        # else:
-        #     print("No DagsHub token found, skipping DagsHub initialization")
+        # Load model and preprocessor once at startup
+        client = MlflowClient()
+        
+        # Get the latest version, regardless of stage
+        versions = client.get_latest_versions("XGBClassifier")
+        
+        if not versions:
+            raise ValueError("No registered versions found for the model.")
 
-        # # Initialize DagsHub with MLflow integration (this is only called once)
-        # dagshub.init(
-        #     repo_owner='neerajjj6785',
-        #     repo_name='real-time-credit-card-transaction-fraud-detection-mlops',
-        #     mlflow=True
-        # )
+        model_version = versions[0].version
+        model = mlflow.pyfunc.load_model(f"models:/XGBClassifier/{model_version}")
+        logging.info(f"Loaded MLflow model version {model_version}")
 
-        # # Set up MLflow to use the tracking URI from DagsHub
-        # mlflow_tracking_uri = "https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow"
-        # if mlflow_tracking_uri:
-        #     mlflow.set_tracking_uri(mlflow_tracking_uri)
-        #     print(f"Setting MLflow Tracking URI: {mlflow_tracking_uri}")
-        # else:
-        #     print("MLflow tracking URI not found, skipping MLflow setup")
-
-        # # Load model and preprocessor once at startup
-        # model_name = "RandomForestClassifier"
-        # version_number = 5
-        # model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{version_number}")
-
-        model = load_object("final_model/model.pkl")
-        preprocessor = load_object("final_model/preprocessor.pkl")
+        preprocessor = load_object(os.getenv("PREPROCESSOR_PATH"))
 
         logging.info("Model and preprocessor loaded successfully")
 
@@ -105,7 +94,8 @@ async def lifespan(app: FastAPI):
         yield  # Ensure app can still start even if the model loading fails
 
 # app = FastAPI()
-app = FastAPI(lifespan=lifespan, root_path="/api", openapi_url="/openapi.json", docs_url="/docs",  redoc_url="/redoc")
+# app = FastAPI(lifespan=lifespan, root_path="/api", openapi_url="/openapi.json", docs_url="/docs",  redoc_url="/redoc")
+app = FastAPI(lifespan=lifespan)
 origins = ["*"]
 
 app.add_middleware(
@@ -168,40 +158,6 @@ def ensure_all_fields(user_request_dict):
     # Ensure all required fields exist with None as default for missing ones
     return {field: user_request_dict.get(field, None) for field in required_fields}
 
-# # Initialize MLflow tracking with DagsHub
-# async def setup():
-#     global model, preprocessor
-
-#     try:
-#         # Set up MLflow
-#         # dagshub.init(
-#         #     repo_owner="neerajjj6785",
-#         #     repo_name="real-time-credit-card-transaction-fraud-detection-mlops",
-#         #     mlflow=True
-#         # )
-
-#         # Initialize Feature Store
-#         store = FeatureStore(repo_path="/mnt/d/real_time_streaming/my_feature_repo/feature_repo")
-
-#         mlflow.set_tracking_uri("https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow")
-        
-#         # Set up MLflow credentials
-#         os.environ["MLFLOW_TRACKING_USERNAME"] = "neerajjj6785"
-#         os.environ["MLFLOW_TRACKING_PASSWORD"] = "d4073bd126374347538627d1f4f255bffaae1de0"
-        
-#         # Load the model
-#         model_name = "RandomForestClassifier"
-#         version_number = 5
-#         model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{version_number}")
-        
-#         # Load the preprocessor
-#         preprocessor = load_object("final_model/preprocessor.pkl")
-#         logging.info("Model and preprocessor loaded successfully")
-#     except Exception as e:
-#         logging.error(f"Error during startup: {e}")
-
-# app.router.on_startup.append(setup)
-
 @app.get("/", tags=["authentication"])
 async def index():
     return RedirectResponse(url="/docs")
@@ -232,17 +188,8 @@ async def create_transaction(transaction: Union[TransactionRequest, SparkTransac
 
         # If request is from Streamlit (TransactionRequest)
         if isinstance(transaction, TransactionRequest):
-            # if not latest_transaction_id:
-            #     return {
-            #         "status": "error",
-            #         "message": "No transaction_id available from Spark yet",
-            #         "transaction_id": None
-            #     }
 
             transaction_dict = transaction.dict()
-
-            # # Assign transaction_id from Spark to the incoming transaction request
-            # transaction_dict["transaction_id"] = latest_transaction_id
 
             # Ensure all fields are present
             complete_transaction = ensure_all_fields(transaction_dict)
@@ -267,75 +214,6 @@ async def create_transaction(transaction: Union[TransactionRequest, SparkTransac
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-# @app.post("/transaction")
-# async def create_transaction(transaction: Union[TransactionRequest, SparkTransactionRequest]):
-#     try:
-#         transaction_id = None
-#         insert_result = None  # Initialize insert_result to avoid referencing before assignment
-
-#         # Handle SparkTransactionRequest (first extract transaction_id)
-#         if isinstance(transaction, SparkTransactionRequest):
-#             transaction_id = transaction.dict().get("transaction_id")
-
-#             # For SparkTransactionRequest, no response is sent, just return
-#             return {}
-
-#         # Handle TransactionRequest (Streamlit request)
-#         if isinstance(transaction, TransactionRequest):
-#             # Convert Pydantic model to dictionary
-#             transaction_dict = transaction.dict()
-
-#             # Ensure all fields are present
-#             complete_transaction = ensure_all_fields(transaction_dict)
-
-#             # Insert into MongoDB
-#             insert_result = collection.insert_one(complete_transaction)
-
-#             response = {
-#                 "status": "success",
-#                 "message": "Transaction recorded successfully",
-#                 "transaction_id": transaction_id,  # Send the transaction_id extracted from SparkTransactionRequest
-#                 "mongodb_id": str(insert_result.inserted_id)
-#             }
-
-#             return response
-        
-        # if isinstance(transaction, TransactionRequest):
-        #     # Convert Pydantic model to dictionary
-        #     transaction_dict = transaction.dict()
-
-        #     # Ensure all fields are present
-        #     complete_transaction = ensure_all_fields(transaction_dict)
-
-        #     # Insert into MongoDB
-        #     insert_result = collection.insert_one(complete_transaction)
-
-        # if isinstance(transaction, SparkTransactionRequest):
-        #     transaction_dict = transaction.dict()
-        #     transaction_id = transaction_dict["transaction_id"]  # For SparkTransactionRequest, use the provided transaction_id
-
-        # # Ensure transaction_id is assigned before proceeding
-        # if not transaction_id:
-        #     raise ValueError("Transaction ID is missing from the request.")
-        
-        # print("transaction_id: ", transaction_id)
-        
-        # # Return the transaction ID for future reference
-        # response = {
-        #     "status": "success",
-        #     "message": "Transaction recorded successfully",
-        #     "transaction_id": transaction_id,
-        #     "mongodb_id": str(insert_result.inserted_id)
-        # }
-
-        # if insert_result:  # Only include MongoDB ID if the transaction was inserted into MongoDB
-        #     response["mongodb_id"] = str(insert_result.inserted_id)
-
-        # return response
-
-    # except Exception as e:
-    #     raise CreditCardException(e, sys)
-    
 @app.post("/predict")
 async def predict(prediction_request: PredictionRequest):
     try:
@@ -376,10 +254,10 @@ async def predict(prediction_request: PredictionRequest):
 
 
         # Check for missing features
-        # missing_features = [f for f in features if f not in feature_data]
-        # if missing_features:
-        #     logging.error(f"Missing features: {missing_features}")
-        #     raise CreditCardException(e, sys)
+        missing_features = [f for f in features if f not in feature_data]
+        if missing_features:
+            logging.error(f"Missing features: {missing_features}")
+            raise CreditCardException(e, sys)
         
         # Convert features to array for model input
         # feature_array = np.array([[feature_data[key][0] for key in feature_data]])

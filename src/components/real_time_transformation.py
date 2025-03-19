@@ -17,7 +17,7 @@ FEATURE_VIEW_NAME="creditcard_fraud"
 # Configuration
 CONFIG = {
     "kafka": {
-        "broker": "52.91.199.118:9092",
+        "broker": "52.91.249.54:9092",
         "topic": "valid_transactions",
     },
     "storage": {
@@ -120,10 +120,10 @@ def send_transaction_to_api(transaction_id, max_retries=3):
     for attempt in range(max_retries):
         try:
             # Configuration Before NGINX
-            # response = requests.post("http://localhost:8000/transaction", json=payload)
+            response = requests.post("http://localhost:8000/transaction", json=payload)
 
             # Configuration After NGINX
-            response = requests.post("http://localhost/api", json=payload)
+            # response = requests.post("http://localhost/api", json=payload)
             
             if response.status_code == 200:
                 logging.info(f"Sent transaction_id {transaction_id} to API successfully.")

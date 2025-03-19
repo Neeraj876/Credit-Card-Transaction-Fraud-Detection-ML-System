@@ -25,9 +25,7 @@ from mlflow.models import infer_signature
 from sklearn.base import BaseEstimator
 from urllib.parse import urlparse
 
-# import dagshub
-# Automatically configure MLflow tracking with DagsHub
-# dagshub.init(repo_owner='neerajjj6785', repo_name='real-time-credit-card-transaction-fraud-detection-mlops', mlflow=True)
+os.environ["MLFLOW_TRACKING_URI"]="http://ec2-98-84-133-222.compute-1.amazonaws.com:5000/"
 
 class ModelTrainer:
     def __init__(self, data_transformation_artifact:DataTransformationArtifact, 
@@ -38,107 +36,96 @@ class ModelTrainer:
         except Exception as e:
             raise CreditCardException(e, sys)
 
-    # def track_mlflow(self,best_model,best_model_name, classification_train_metric=None, classification_test_metric=None, X_train=None):
+    def track_mlflow(self, best_model, best_model_name, classification_train_metric=None, classification_test_metric=None, X_train=None):
 
-    #         # try:   
-    #             # Check if an MLflow run is already active
-    #             # if mlflow.active_run() is None:
-    #             #     run = mlflow.start_run()
-    #             # else:
-    #             #     run = mlflow.active_run()
+        try:
+            remote_server_uri = "http://ec2-34-207-207-10.compute-1.amazonaws.com:5000/"
+            mlflow.set_tracking_uri(remote_server_uri)
 
-    #         if mlflow.active_run():
-    #             mlflow.end_run()  # Ensure no active runs before starting a new one
+            # End any existing active run before starting a new one
+            if mlflow.active_run():
+                logging.warning(f"Ending previous MLflow run: {mlflow.active_run().info.run_id}")
+                mlflow.end_run()
 
-    #         with mlflow.start_run(run_name=best_model_name):
+            with mlflow.start_run(run_name=best_model_name):
+                logging.info(f"Starting MLflow run: {mlflow.active_run().info.run_id}")
 
-    #             # Log parameters from the model
-    #             model_params = best_model.get_params() if hasattr(best_model, 'get_params') else {}
-    #             mlflow.log_params(model_params)
+                # Log model parameters if available
+                if hasattr(best_model, 'get_params'):
+                    mlflow.log_params(best_model.get_params())
 
-    #             # Log training metrics if available
-    #             if classification_train_metric:
-    #                 mlflow.log_metrics({
-    #                     "train_f1_score": classification_train_metric.f1_score,
-    #                     "train_precision": classification_train_metric.precision_score,
-    #                     "train_recall": classification_train_metric.recall_score
-    #                 })
+                # Log training metrics if available
+                if classification_train_metric:
+                    mlflow.log_metrics({
+                        "train_f1_score": classification_train_metric.f1_score,
+                        "train_precision": classification_train_metric.precision_score,
+                        "train_recall": classification_train_metric.recall_score
+                    })
 
-    #             # Log test metrics if available
-    #             if classification_test_metric:
-    #                 mlflow.log_metrics({
-    #                     "test_f1_score": classification_test_metric.f1_score,
-    #                     "test_precision": classification_test_metric.precision_score,
-    #                     "test_recall": classification_test_metric.recall_score
-    #                 })
+                # Log test metrics if available
+                if classification_test_metric:
+                    mlflow.log_metrics({
+                        "test_f1_score": classification_test_metric.f1_score,
+                        "test_precision": classification_test_metric.precision_score,
+                        "test_recall": classification_test_metric.recall_score
+                    })
 
-    #             # f1_score=classificationmetric.f1_score
-    #             # precision_score=classificationmetric.precision_score
-    #             # recall_score=classificationmetric.recall_score
+                # Take a sample input example for logging
+                input_example = X_train[:1] if X_train is not None else None
+                signature = infer_signature(X_train, best_model.predict(X_train)) if X_train is not None else None
 
+                # Determine the appropriate logging function for the model
+                if isinstance(best_model, xgb.Booster):
+                    log_model_func = mlflow.xgboost.log_model
+                elif isinstance(best_model, xgb.XGBModel):
+                    log_model_func = mlflow.xgboost.log_model
+                else:
+                    log_model_func = mlflow.sklearn.log_model
 
-    #             # mlflow.log_metric("f1_score",f1_score)
-    #             # mlflow.log_metric("precision",precision_score)
-    #             # mlflow.log_metric("recall_score",recall_score)
-    #             # mlflow.sklearn.log_model(best_model,"model")
+                # Check tracking storage type
+                tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
 
-    #             # Log model based on type
-    #             # if isinstance(best_model, xgboost.XGBModel):
-    #             #     mlflow.xgboost.log_model(best_model, "model")
-    #             # elif isinstance(best_model, BaseEstimator):
-    #             #     mlflow.sklearn.log_model(best_model, "model")
-    #             # else:
-    #             #     raise ValueError("Unsupported model type")
+                # Register model only if not using file-based storage
+                if tracking_url_type_store != "file":
+                    log_model_func(
+                        best_model, 
+                        "model", 
+                        registered_model_name=best_model_name,
+                        signature=signature,
+                        input_example=input_example
+                    )
+                    logging.info(f"Model registered as: {best_model_name}")
+                else:
+                    log_model_func(
+                        best_model, 
+                        "model",
+                        signature=signature,
+                        input_example=input_example
+                    )
+                    logging.info("Model logged but not registered (file-based storage)")
 
-    #             # Take one sample input (assuming X_train is a DataFrame or NumPy array)
-    #             input_example = X_train[:1]  
+                logging.info(f"MLflow run completed with ID: {mlflow.active_run().info.run_id}")
 
-    #             # Infer the model signature
-    #             signature = infer_signature(X_train, best_model.predict(X_train))
+        except Exception as e:
+            logging.error(f"Error during MLflow tracking: {e}")
+            raise
 
-    #             # Determine model type and log accordingly
-    #             if hasattr(xgb, 'XGBModel') and isinstance(best_model, xgb.XGBModel):
-    #                 log_model_func = mlflow.xgboost.log_model
-    #             elif hasattr(xgb, 'Booster') and isinstance(best_model, xgb.Booster):
-    #                 log_model_func = mlflow.xgboost.log_model
-    #             else:
-    #                 # Default to scikit-learn for other model types
-    #                 log_model_func = mlflow.sklearn.log_model
-                    
-    #             # Check tracking storage type
-    #             tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
-
-    #              # Model registry does not work with file store
-    #             if tracking_url_type_store != "file":
-    #                 log_model_func(
-    #                     best_model, 
-    #                     "model", 
-    #                     registered_model_name=best_model_name,
-    #                     signature=signature,
-    #                     input_example=input_example
-    #                 )
-    #                 logging.info(f"Model registered as: {best_model_name}")
-    #             else:
-    #                 log_model_func(
-    #                     best_model, 
-    #                     "model",
-    #                     signature=signature,
-    #                     input_example=input_example
-    #                 )
-    #                 logging.info("Model logged but not registered (file-based storage)")
-                
-    #             logging.info(f"MLflow run completed with ID: {mlflow.active_run().info.run_id}")
+        finally:
+            # Ensure the run is properly ended
+            if mlflow.active_run():
+                mlflow.end_run()
+            logging.info("MLflow run ended successfully.")
                 
                         
-                # Model registry does not work with file store
-                # Register the model only if it's NOT file-based
-                # if tracking_url_type_store != "file":
+            #     Model registry does not work with file store
+            #     Register the model only if it's NOT file-based
+            #     if tracking_url_type_store != "file":
                 
-                #     model_uri = f"runs:/{mlflow.active_run().info.run_id}/model"
-                #     mlflow.register_model(model_uri, best_model_name)
-                #     print(f"Model registered as: {best_model_name}")
-                # else:
-                #     print("Model Registry is not available when using file-based storage.")
+            #         model_uri = f"runs:/{mlflow.active_run().info.run_id}/model"
+            #         mlflow.register_model(model_uri, best_model_name)
+            #         print(f"Model registered as: {best_model_name}")
+            #     else:
+            #         print("Model Registry is not available when using file-based storage.")
 
             # finally:
             #     # Ensure the run is properly closed if we started it
@@ -244,14 +231,15 @@ class ModelTrainer:
 
             # Track the experiments with mlflow
             # self.track_mlflow(best_model=best_model, best_model_name=best_model_name, classification_test_metric=classification_test_metric, X_train=X_test)
+
             # Track the experiments with mlflow - single run with both train and test metrics
-            # self.track_mlflow(
-            #     best_model=best_model, 
-            #     best_model_name=best_model_name, 
-            #     classification_train_metric=classification_train_metric, 
-            #     classification_test_metric=classification_test_metric, 
-            #     X_train=X_train
-            # )
+            self.track_mlflow(
+                best_model=best_model, 
+                best_model_name=best_model_name, 
+                classification_train_metric=classification_train_metric, 
+                classification_test_metric=classification_test_metric, 
+                X_train=X_train
+            )
 
             preprocessor = load_object(file_path=self.data_transformation_artifact.transformed_object_file_path)
 
