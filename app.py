@@ -262,7 +262,7 @@ async def predict(prediction_request: PredictionRequest):
         missing_features = [f for f in features if f not in feature_data]
         if missing_features:
             logging.error(f"Missing features: {missing_features}")
-            raise CreditCardException(e, sys)
+            raise CreditCardException(f"Missing features: {missing_features}", sys)
         
         # Convert features to array for model input
         # feature_array = np.array([[feature_data[key][0] for key in feature_data]])
