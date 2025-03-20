@@ -32,4 +32,5 @@ volumes:
 
 networks:
   monitoring:
-    external: true # This connects to the pre-existing network
+    name: monitoring
+ # This connects to the pre-existing network
