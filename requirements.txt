@@ -27,5 +27,6 @@ streamlit
 requests 
 evidently
 boto3
+prometheus-fastapi-instrumentator
 
 # -e .

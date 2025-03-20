@@ -17,8 +17,6 @@ from scipy.stats import ks_2samp
 from evidently.report import Report
 from evidently.metrics import DataDriftTable
 
-# os.environ["MLFLOW_TRACKING_URI"]="http://ec2-34-207-207-10.compute-1.amazonaws.com:5000/"
-
 class DataValidation:
     def __init__(self, data_ingestion_artifact:DataIngestionArtifact, 
     data_validation_config:DataValidationConfig

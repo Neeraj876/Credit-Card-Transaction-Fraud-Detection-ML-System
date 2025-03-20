@@ -25,6 +25,7 @@ import certifi
 
 from mlflow.tracking import MlflowClient
 from typing import Union
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -65,9 +66,9 @@ async def lifespan(app: FastAPI):
 
 
         # Configure MLflow to use EC2-hosted tracking server
-        remote_tracking_uri = "http://ec2-34-207-207-10.compute-1.amazonaws.com:5000"
-        mlflow.set_tracking_uri(remote_tracking_uri)
-        logging.info(f"MLflow Tracking URI set to: {remote_tracking_uri}")
+        # remote_tracking_uri = "http://ec2-34-207-207-10.compute-1.amazonaws.com:5000"
+        mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+        logging.info(f"MLflow Tracking URI set to: {MLFLOW_TRACKING_URI}")
 
         # Load model and preprocessor once at startup
         client = MlflowClient()
@@ -106,6 +107,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add Prometheus instrumentation
+Instrumentator().instrument(app).expose(app)
 
 # Define the request body schemas
 class TransactionRequest(BaseModel):

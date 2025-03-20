@@ -135,10 +135,10 @@ jobs:
           set +a
 
           echo "Pulling latest Docker images..."
-          docker-compose pull
+          docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml pull
 
           echo "Starting services with Docker Compose..."
-          docker-compose up -d
+          docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d --remove-orphans
 
           echo "Cleaning up unused resources..."
           docker image prune -f

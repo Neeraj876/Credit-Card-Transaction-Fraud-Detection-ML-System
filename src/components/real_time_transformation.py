@@ -11,13 +11,15 @@ from feast import FeatureStore
 import time
 
 # Initialize Feature Store
-FEAST_REPO_PATH="/mnt/d/real_time_streaming/my_feature_repo/feature_repo"
+# FEAST_REPO_PATH="/mnt/d/real_time_streaming/my_feature_repo/feature_repo"
+FEAST_REPO_PATH = os.getenv("FEATURE_REPO_PATH")
+
 FEATURE_VIEW_NAME="creditcard_fraud"
 
 # Configuration
 CONFIG = {
     "kafka": {
-        "broker": "52.91.249.54:9092",
+        "broker": "3.83.23.236:9092",
         "topic": "valid_transactions",
     },
     "storage": {
@@ -119,11 +121,16 @@ def send_transaction_to_api(transaction_id, max_retries=3):
     
     for attempt in range(max_retries):
         try:
-            # Configuration Before NGINX
-            response = requests.post("http://localhost:8000/transaction", json=payload)
+            # Configuration Before NGINX and Before Deployment
+            # response = requests.post("http://localhost:8000/transaction", json=payload)
 
             # Configuration After NGINX
             # response = requests.post("http://localhost/api", json=payload)
+  
+            # Configuration After Deployment
+            response = requests.post("http://34.227.11.162:8000/transaction", json=payload)
+
+            
             
             if response.status_code == 200:
                 logging.info(f"Sent transaction_id {transaction_id} to API successfully.")

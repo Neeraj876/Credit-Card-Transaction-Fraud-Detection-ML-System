@@ -8,15 +8,22 @@ import time
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Configuration Before NGINX
-API_ENDPOINT = "http://localhost:8000"
-TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
-PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
+# Configuration Before NGINX and Before Deployment
+# API_ENDPOINT = "http://localhost:8000"
+# TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
+# PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
 
 # Configuration After NGINX
 # API_ENDPOINT = "http://localhost/api"
 # TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
 # PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
+
+# Configuration after deployment
+API_ENDPOINT = "http://34.227.11.162:8000"
+TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
+PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
+
+
 
 # Set page config
 st.set_page_config(

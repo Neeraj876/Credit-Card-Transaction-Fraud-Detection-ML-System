@@ -9,12 +9,14 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+    networks:
+      - monitoring  # Ensure it's on the same network as Prometheus
     environment:
       FEATURE_REPO_PATH: "/app/my_feature_repo/feature_repo"
       PREPROCESSOR_PATH: "/app/final_model/preprocessor.pkl"
       REDIS_URL: "redis://redis:6379"
-      MONGO_DB_URL: mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-      MLFLOW_TRACKING_URI: "http://ec2-98-84-133-222.compute-1.amazonaws.com/"
+      MONGO_DB_URL: "mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MLFLOW_TRACKING_URI: "http://ec2-54-242-223-94.compute-1.amazonaws.com:5000/"
 
   streamlit:
     build:
@@ -24,6 +26,8 @@ services:
       - "8501:8501"
     depends_on:
       - fastapi
+    networks:
+      - monitoring
 
   redis:
     image: redis:7
@@ -31,6 +35,8 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - monitoring
 
   postgres:
     image: postgres:15
@@ -42,38 +48,13 @@ services:
       - POSTGRES_DB=feast_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
 
 volumes:
   redis_data:
   postgres_data:
 
-
-# version: '3'
-
-# services:
-#   fastapi:
-#     build: 
-#       context: .
-#       dockerfile: Dockerfile.fastapi
-#     ports:
-#       - "8000:8000"
-#     environment:
-#       # - MLFLOW_TRACKING_URI=https://dagshub.com/neerajjj6785/real-time-credit-card-transaction-fraud-detection-mlops.mlflow
-#       # - DAGSHUB_TOKEN="9aaf0099824b57a6c52cbc7d476b66f006f9b0f7"
-#       - FEAST_URL=http://172.31.24.32:6566
-#       - REDIS_URL=redis://redis:6379
-#       - MONGO_URI=mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-
-#     depends_on:
-#       - redis
-#       - postgres
-
-# nginx:
-#   build: 
-#     context: ./nginx
-#   ports:
-#     - "80:80"
-#   depends_on:
-#     - fastapi
-#     - streamlit
-
+networks:
+  monitoring:
+    driver: bridge # This creates the network

@@ -38,7 +38,8 @@ class DataIngestion:
             Retrieve historical features from feast offline store postgres
             """
             # Initialize Feature Store
-            store = FeatureStore(repo_path="/mnt/d/real_time_streaming/my_feature_repo/feature_repo")
+            FEATURE_REPO_PATH = os.getenv("FEATURE_REPO_PATH")
+            store = FeatureStore(repo_path=FEATURE_REPO_PATH)
 
             # list of features to fetch
             features = [
@@ -61,6 +62,8 @@ class DataIngestion:
             ).to_df()
 
             df.replace({"na":np.nan}, inplace=True)
+
+            df.to_csv("", index=False, header=True)
             
             return df
         

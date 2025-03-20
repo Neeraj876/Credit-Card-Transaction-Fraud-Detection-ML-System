@@ -25,7 +25,9 @@ from mlflow.models import infer_signature
 from sklearn.base import BaseEstimator
 from urllib.parse import urlparse
 
-os.environ["MLFLOW_TRACKING_URI"]="http://ec2-98-84-133-222.compute-1.amazonaws.com:5000/"
+# Set MLflow tracking URI from environment variable
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+os.environ["MLFLOW_TRACKING_URI"] = MLFLOW_TRACKING_URI
 
 class ModelTrainer:
     def __init__(self, data_transformation_artifact:DataTransformationArtifact, 
@@ -39,8 +41,8 @@ class ModelTrainer:
     def track_mlflow(self, best_model, best_model_name, classification_train_metric=None, classification_test_metric=None, X_train=None):
 
         try:
-            remote_server_uri = "http://ec2-34-207-207-10.compute-1.amazonaws.com:5000/"
-            mlflow.set_tracking_uri(remote_server_uri)
+            # remote_server_uri = "http://ec2-34-207-207-10.compute-1.amazonaws.com:5000/"
+            mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
             # End any existing active run before starting a new one
             if mlflow.active_run():
@@ -116,22 +118,6 @@ class ModelTrainer:
                 mlflow.end_run()
             logging.info("MLflow run ended successfully.")
                 
-                        
-            #     Model registry does not work with file store
-            #     Register the model only if it's NOT file-based
-            #     if tracking_url_type_store != "file":
-                
-            #         model_uri = f"runs:/{mlflow.active_run().info.run_id}/model"
-            #         mlflow.register_model(model_uri, best_model_name)
-            #         print(f"Model registered as: {best_model_name}")
-            #     else:
-            #         print("Model Registry is not available when using file-based storage.")
-
-            # finally:
-            #     # Ensure the run is properly closed if we started it
-            #     if mlflow.active_run() and run is not None:
-            #         mlflow.end_run()
-
     def train_model(self, X_train, y_train, X_test, y_test):
         try:
             models = {
@@ -140,35 +126,6 @@ class ModelTrainer:
             # "SVC": SVC(verbose=1),
             "RandomForestClassifier": RandomForestClassifier(  class_weight="balanced", random_state=42, verbose=1),
             }
-
-            # params = {
-            #     "Logistic Regression": {
-            #         'C': [0.01, 0.1, 1, 10],  # Regularization strength
-            #         'solver': ['lbfgs', 'liblinear', 'saga'],  # Saga works well for large datasets
-            #     },
-
-            #     "SVC": {
-            #         'C': [0.01, 0.1, 1, 5],  # Prevents convergence issues
-            #         'kernel': ['linear', 'rbf'],  # Test both
-            #         'gamma': ['scale', 'auto'],  # Important for rbf
-            #     },
-
-            #     "RandomForestClassifier": {
-            #         'n_estimators': [100, 200],  # More trees improve stability
-            #         'max_depth': [None, 10, 20],  # None allows full growth
-            #         'min_samples_split': [2, 5, 10],  # Regularization for better generalization
-            #         'min_samples_leaf': [1, 2, 4],  # Controls overfitting
-            #     },
-
-            #     # "XGBClassifier": {
-            #     #     'n_estimators': [100, 200],  # More boosting rounds
-            #     #     'learning_rate': [0.01, 0.1, 0.2],  # Step size
-            #     #     'max_depth': [3, 6, 9],  # Controls tree complexity
-            #     #     'subsample': [0.7, 1.0],  # Prevents overfitting
-            #     #     'colsample_bytree': [0.7, 1.0],  # Feature selection
-            #     # }
-            # }
-
 
             params = {
                 "Logistic Regression": {
