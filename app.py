@@ -268,6 +268,7 @@ async def predict(prediction_request: PredictionRequest):
         # feature_array = np.array([[feature_data[key][0] for key in feature_data]])
 
         # Convert features to pandas DataFrame for model input
+        
         feature_df = pd.DataFrame(feature_data)
         
         # Preprocess features
@@ -278,7 +279,7 @@ async def predict(prediction_request: PredictionRequest):
             raise CreditCardException("Model is not loaded", sys)
 
         # Get prediction
-        
+
         if hasattr(model, "predict_proba"):
             fraud_probability = model.predict_proba(preprocessed_features)[:, 1][0]
         else:
