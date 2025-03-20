@@ -221,7 +221,7 @@ async def create_transaction(transaction: Union[TransactionRequest, SparkTransac
 
 @app.post("/predict")
 async def predict(prediction_request: PredictionRequest):
-    try:
+    # try:
         
         # Define the features to fetch
         features = [
@@ -259,10 +259,10 @@ async def predict(prediction_request: PredictionRequest):
 
 
         # Check for missing features
-        missing_features = [f for f in features if f not in feature_data]
-        if missing_features:
-            logging.error(f"Missing features: {missing_features}")
-            raise CreditCardException(f"Missing features: {missing_features}", sys)
+        # missing_features = [f for f in features if f not in feature_data]
+        # if missing_features:
+        #     logging.error(f"Missing features: {missing_features}")
+        #     raise CreditCardException(f"Missing features: {missing_features}", sys)
         
         # Convert features to array for model input
         # feature_array = np.array([[feature_data[key][0] for key in feature_data]])
@@ -278,6 +278,7 @@ async def predict(prediction_request: PredictionRequest):
             raise CreditCardException("Model is not loaded", sys)
 
         # Get prediction
+        
         if hasattr(model, "predict_proba"):
             fraud_probability = model.predict_proba(preprocessed_features)[:, 1][0]
         else:
@@ -303,9 +304,9 @@ async def predict(prediction_request: PredictionRequest):
             # "fraud_probability": float(fraud_probability),
             "fraud_label": int(fraud_label)
         }
-    except Exception as e:
-        logging.error(f"Prediction error: {str(e)}")
-        raise CreditCardException(e, sys)
+    # except Exception as e:
+    #     logging.error(f"Prediction error: {str(e)}")
+    #     raise CreditCardException(e, sys)
 
 if __name__ == "__main__":
     app_run(app, host="0.0.0.0", port=8000)
