@@ -77,7 +77,6 @@ jobs:
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> env-file.txt
           echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> env-file.txt
           echo "FEATURE_REPO_PATH=/app/my_feature_repo/feature_repo" >> env-file.txt
-          echo "PREPROCESSOR_PATH=/app/final_model/preprocessor.pkl" >> env-file.txt
           
           echo "File created at:"
           pwd

@@ -8,18 +8,25 @@ from pyspark.sql.functions import abs, expr, monotonically_increasing_id
 
 import requests
 from feast import FeatureStore
+from feast.data_source import PushMode
 import time
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Initialize Feature Store
 # FEAST_REPO_PATH="/mnt/d/real_time_streaming/my_feature_repo/feature_repo"
 FEAST_REPO_PATH = os.getenv("FEATURE_REPO_PATH")
 
-FEATURE_VIEW_NAME="creditcard_fraud"
+# FEATURE_VIEW_NAME="creditcard_fraud"
+TRANSACTION_PUSH_SCORE="transaction_push_source"
 
 # Configuration
 CONFIG = {
     "kafka": {
-        "broker": "3.83.23.236:9092",
+        "broker": "3.83.46.209:9092",
         "topic": "valid_transactions",
     },
     "storage": {
@@ -130,8 +137,6 @@ def send_transaction_to_api(transaction_id, max_retries=3):
             # Configuration After Deployment
             response = requests.post("http://34.227.11.162:8000/transaction", json=payload)
 
-            
-            
             if response.status_code == 200:
                 logging.info(f"Sent transaction_id {transaction_id} to API successfully.")
                 return True  # Success
@@ -238,8 +243,6 @@ def write_to_stores(batch_df, epoch_id):
         #     response = send_transaction_to_api(transaction_id)
         # logging.info(f"Response is: {response}")
         
-        # final_df.foreachPartition(send_to_api_partition)
-
         # Send transactions to API in parallel
         final_df.select("transaction_id").foreachPartition(send_to_api_partition)
 
@@ -275,9 +278,16 @@ def write_to_stores(batch_df, epoch_id):
             store = FeatureStore(repo_path=FEAST_REPO_PATH)
 
             # Write features to Feast Online Store (Redis)
-            store.write_to_online_store(FEATURE_VIEW_NAME, pandas_df)
+            # store.write_to_online_store(FEATURE_VIEW_NAME, pandas_df)
 
-            logging.info(f"Epoch {epoch_id} - Successfully wrote to Feast Online Store (Redis).")
+            # Write to Redis only by specifying ONLINE mode
+            store.push(
+                TRANSACTION_PUSH_SCORE,  
+                pandas_df, 
+                to=PushMode.ONLINE # Explicitly specify ONLINE only 
+            )
+
+            logging.info(f"Epoch {epoch_id} - Successfully wrote to Feast Online Store (Redis) Only.")
             
             # final_df.write \
             #     .format("org.apache.spark.sql.redis") \

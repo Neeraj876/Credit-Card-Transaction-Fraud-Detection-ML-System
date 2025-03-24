@@ -2,15 +2,16 @@ columns:
   - transaction_id: int64
   - event_timestamp: datetime64[ns]
   - cc_num: int64
+  - amt: float64 
   - merchant: string       
-  - category: string         
-  - amt: float64                        
+  - category: string 
   - gender: string             
-  - city_pop: int64           
-  - job: string         
+  - job: string                   
   - trans_year: int64
   - trans_month: int64     
-  - is_fraud: int64                     
+  - is_fraud: int64        
+  - city_pop: int64           
+             
 
 numeric_columns:
   - cc_num

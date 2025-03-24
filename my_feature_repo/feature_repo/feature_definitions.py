@@ -43,5 +43,5 @@ creditcard_fraud_fv = FeatureView(
         Field(name="is_fraud", dtype=Int64),
         Field(name="city_pop", dtype=Int64),
     ],
-    source=transaction_batch_source,
+    source=transaction_push_source,
 )

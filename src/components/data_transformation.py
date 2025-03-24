@@ -3,6 +3,10 @@ import sys
 import numpy as np
 import pandas as pd
 import warnings
+import mlflow
+from mlflow.pyfunc import PythonModel
+from mlflow.models.signature import infer_signature
+from typing import Any
 
 # Ignore all warnings
 warnings.filterwarnings("ignore")
@@ -25,6 +29,54 @@ from category_encoders import TargetEncoder
 # Ensure TargetEncoder outputs numeric values
 # def ensure_numeric(X):
 #     return X.astype(np.float32)
+
+# class TransformerWithPredict:
+#     def __init__(self, transformer):
+#         self.transformer = transformer
+    
+#     def predict(self, X):
+#         return self.transformer.transform(X)
+    
+#     def transform(self, X):
+#         return self.transformer.transform(X)
+    
+#     def fit(self, X, y=None):
+#         self.transformer.fit(X, y)
+#         return self
+    
+#     # Include this to ensure all methods are passed through
+#     def __getattr__(self, name):
+#         if hasattr(self.transformer, name):
+#             return getattr(self.transformer, name)
+#         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+# Create a PythonModel class for the wrapper
+class PreprocessorWrapper(PythonModel):
+    def __init__(self, preprocessor):
+        self.preprocessor = preprocessor
+    
+    def predict(self, context: Any, model_input: pd.DataFrame) -> np.ndarray:
+        """
+        Transform data using the wrapped preprocessor.
+        
+        Args:
+            context: MLflow model context (not used but required by MLflow)
+            model_input: Pandas DataFrame to transform
+            
+        Returns:
+            Transformed data from the preprocessor
+        """
+        # Ensure model_input is a pandas DataFrame
+        import pandas as pd
+        if not isinstance(model_input, pd.DataFrame):
+            if isinstance(model_input, np.ndarray):
+                # Convert numpy array to DataFrame if needed
+                model_input = pd.DataFrame(model_input)
+            else:
+                raise TypeError("Input must be a pandas DataFrame or numpy array")
+        
+        # Apply the transform method of the preprocessor
+        return self.preprocessor.transform(model_input)
 
 class DataTransformation:
     def __init__(self, data_validation_artifact: DataValidationArtifact, data_transformation_config: DataTransformationConfig):
@@ -156,6 +208,35 @@ class DataTransformation:
             logging.info(f"Saved the arrays and preprocessor object.")
 
             save_object(FINAL_PREPROCESSOR_PATH, pre_processor)
+            # mlflow.sklearn.log_model(
+            #     pre_processor, 
+            #     "preprocessor", 
+            #     registered_model_name="feature_preprocessor"
+            # ) 
+
+            # # wrap the fitted preprocessor for MLflow logging
+            # wrapped_preprocessor = TransformerWithPredict(pre_processor)
+
+            # # Log the wrapped preprocessor to MLflow
+            # mlflow.sklearn.log_model(
+            #     wrapped_preprocessor,
+            #     "preprocessor", 
+            #     registered_model_name="feature_preprocessor"
+            # )
+
+            # Then in your training code
+            wrapped_model = PreprocessorWrapper(pre_processor)
+
+            # Infer the model signature using test data
+            signature = infer_signature(X_test, pre_processor.transform(X_test))
+
+            # Log the model with pyfunc
+            mlflow.pyfunc.log_model(
+                artifact_path="preprocessor",
+                python_model=wrapped_model,
+                signature=signature,
+                registered_model_name="feature_preprocessor"
+            )
 
             logging.info("Data transformation completed successfully.")
             return DataTransformationArtifact(

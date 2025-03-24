@@ -72,20 +72,115 @@ async def lifespan(app: FastAPI):
 
         # Load model and preprocessor once at startup
         client = MlflowClient()
+
+        # Get information about registered models
+        try:
+            model_names = [m.name for m in client.search_registered_models()]
+            logging.info(f"✓ Found registered models: {model_names}")
+            
+            if 'XGBClassifier' not in model_names or 'feature_preprocessor' not in model_names:
+                logging.info("❌ Error: Required models not found in the registry")
+                missing = []
+                if 'XGBClassifier' not in model_names:
+                    missing.append('XGBClassifier')
+                if 'feature_preprocessor' not in model_names:
+                    missing.append('feature_preprocessor')
+                logging.info(f" Missing: {', '.join(missing)}")
+                sys.exit(1)
+        except Exception as e:
+            logging.error(f"❌ Failed to retrieve registered models: {str(e)}")
+            sys.exit(1)
+
+        # Get model versions
+        model_version = None
+        preprocessor_version = None
+
+        try:
+            # Get XGBClassifier versions
+            model_versions = client.search_model_versions("name='XGBClassifier'")
+            if not model_versions:
+                logging.info("❌ Error: No versions found for XGBClassifier")
+                sys.exit(1)
+            
+            # Sort by version number (latest first)
+            model_versions = sorted(model_versions, key=lambda x: int(x.version), reverse=True)
+            model_version = model_versions[0].version
+            logging.info(f"✓ Latest XGBClassifier version: {model_version}")
+            
+            # Get preprocessor versions
+            preprocessor_versions = client.search_model_versions("name='feature_preprocessor'")
+            if not preprocessor_versions:
+                logging.info("❌ Error: No versions found for feature_preprocessor")
+                sys.exit(1)
+            
+            # Sort by version number (latest first)
+            preprocessor_versions = sorted(preprocessor_versions, key=lambda x: int(x.version), reverse=True)
+            preprocessor_version = preprocessor_versions[0].version
+            logging.info(f"✓ Latest feature_preprocessor version: {preprocessor_version}")
+        except Exception as e:
+            logging.error(f"❌ Failed to retrieve model versions: {str(e)}")
+            sys.exit(1)
+
+        # # Get all versions of the registered model
+        # versions = client.search_model_versions("name='XGBClassifier'")
         
-        # Get the latest version, regardless of stage
-        versions = client.get_latest_versions("XGBClassifier")
+        # # Get the latest version, regardless of stage
+        # # versions = client.get_latest_versions("XGBClassifier")
         
-        if not versions:
-            raise ValueError("No registered versions found for the model.")
+        # if not versions:
+        #     raise ValueError("No registered versions found for the model.")
+        
+        # # Sort by version number (latest first)
+        # versions = sorted(versions, key=lambda x: int(x.version), reverse=True)
 
-        model_version = versions[0].version
-        model = mlflow.pyfunc.load_model(f"models:/XGBClassifier/{model_version}")
-        logging.info(f"Loaded MLflow model version {model_version}")
+        # # Get the latest version
+        # latest_version = versions[0].version
 
-        preprocessor = load_object(os.getenv("PREPROCESSOR_PATH"))
+        # # model_version = versions[0].version
+        # # model = mlflow.pyfunc.load_model(f"models:/XGBClassifier/{model_version}")
 
-        logging.info("Model and preprocessor loaded successfully")
+        # # Load the latest version of the preprocessor
+        # model = mlflow.sklearn.load_model(f"models:/XGBClassifier/{latest_version}")
+
+        # logging.info(f"Loaded MLflow model version {latest_version}")
+
+        # # Get all versions of the registered preprocessor
+        # preprocessor_versions = client.search_model_versions("name='feature_preprocessor'")
+
+        # if not preprocessor_versions:
+        #     raise ValueError("No registered versions found for the preprocessor.")
+
+        # # Sort by version number (latest first)
+        # preprocessor_versions = sorted(preprocessor_versions, key=lambda x: int(x.version), reverse=True)
+
+        # # Get the latest version
+        # latest_version = preprocessor_versions[0].version
+
+        # # preprocessor = load_object(os.getenv("PREPROCESSOR_PATH"))
+
+        # # Load the latest version of the preprocessor
+        # preprocessor = mlflow.sklearn.load_model(f"models:/feature_preprocessor/{latest_version}")
+        # logging.info("Model and preprocessor loaded successfully")
+
+        # Load preprocessor
+        try:
+            logging.info("\nLoading feature preprocessor...")
+            preprocessor = mlflow.pyfunc.load_model(f"models:/feature_preprocessor/{preprocessor_version}")
+            logging.info(f"✓ Successfully loaded preprocessor (version {preprocessor_version})")
+            logging.info(f"   Type: {type(preprocessor).__name__}")
+        except Exception as e:
+            logging.error(f"❌ Failed to load preprocessor: {str(e)}")
+            sys.exit(1)
+        
+        # Load model
+        try:
+            logging.info("\nLoading XGBClassifier model...")
+            model = mlflow.pyfunc.load_model(f"models:/XGBClassifier/{model_version}")
+            logging.info(f"✓ Successfully loaded model (version {model_version})")
+            logging.info(f"   Type: {type(model).__name__}")
+        except Exception as e:
+            logging.error(f"❌ Failed to load model: {str(e)}")
+            sys.exit(1)
 
         # Yield control back to the app for async startup tasks
         yield
@@ -93,6 +188,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logging.error(f"Failed to load model: {e}")
         model = None
+        preprocessor = None
         yield  # Ensure app can still start even if the model loading fails
 
 # app = FastAPI()
@@ -268,11 +364,11 @@ async def predict(prediction_request: PredictionRequest):
         # feature_array = np.array([[feature_data[key][0] for key in feature_data]])
 
         # Convert features to pandas DataFrame for model input
-        
+
         feature_df = pd.DataFrame(feature_data)
         
         # Preprocess features
-        preprocessed_features = preprocessor.transform(feature_df)
+        preprocessed_features = preprocessor.predict(feature_df)
        
 
         if model is None:
@@ -280,10 +376,10 @@ async def predict(prediction_request: PredictionRequest):
 
         # Get prediction
 
-        if hasattr(model, "predict_proba"):
-            fraud_probability = model.predict_proba(preprocessed_features)[:, 1][0]
-        else:
-            fraud_label = model.predict(preprocessed_features)[0]
+        # if hasattr(model, "predict_proba"):
+        #     fraud_probability = model.predict_proba(preprocessed_features)[:, 1][0]
+    
+        fraud_label = model.predict(preprocessed_features)[0]
         
         # Determine fraud label
         # fraud_label = 1 if fraud_probability >= 0.5 else 0
@@ -298,8 +394,7 @@ async def predict(prediction_request: PredictionRequest):
         # )
 
         logging.info(f"Transaction ID: {prediction_request.transaction_id}, Fraud Label: {fraud_label}")
-
-                
+ 
         return {
             "transaction_id": prediction_request.transaction_id,
             # "fraud_probability": float(fraud_probability),

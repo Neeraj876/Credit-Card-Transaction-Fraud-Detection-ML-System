@@ -25,6 +25,11 @@ from mlflow.models import infer_signature
 from sklearn.base import BaseEstimator
 from urllib.parse import urlparse
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 # Set MLflow tracking URI from environment variable
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 os.environ["MLFLOW_TRACKING_URI"] = MLFLOW_TRACKING_URI
@@ -121,38 +126,50 @@ class ModelTrainer:
     def train_model(self, X_train, y_train, X_test, y_test):
         try:
             models = {
-            "Logistic Regression": LogisticRegression(max_iter=5000, class_weight="balanced", verbose=1),
+            # "Logistic Regression": LogisticRegression(max_iter=5000, class_weight="balanced", verbose=1),
             "XGBClassifier":  XGBClassifier(min_child_weight=3, subsample=0.7,  colsample_bytree=0.7,  reg_lambda=1, reg_alpha=1, objective="binary:logistic",  eval_metric="logloss", verbosity=1, random_state=42), 
             # "SVC": SVC(verbose=1),
             "RandomForestClassifier": RandomForestClassifier(  class_weight="balanced", random_state=42, verbose=1),
             }
 
+            # params = {
+    
+            #     "XGBClassifier": {
+            #         'n_estimators': [50, 100, 200],  # Number of boosting rounds. More rounds improve performance but can lead to overfitting.
+
+            #         'learning_rate': [0.01, 0.1, 0.05],  # Step size for each boosting round. 
+
+            #         'max_depth': [3, 6],  # Maximum depth of each tree. 
+            #     },
+
+            #     "RandomForestClassifier": {
+            #         'n_estimators': [50, 100],  # Number of trees in the forest. More trees generally lead to better performance but increase computation time.
+
+            #         'max_depth': [10, 20],  # Maximum depth of trees. 
+            #     },
+
+           
+
             params = {
-                "Logistic Regression": {
-                    'C': [0.1, 1, 5],  # Regularization strength. Smaller values apply stronger regularization.
-
-                    'solver': ['lbfgs', 'liblinear', 'saga'],  # Optimization algorithms. 
-                },
-
                 "XGBClassifier": {
-                    'n_estimators': [50, 100, 200],  # Number of boosting rounds. More rounds improve performance but can lead to overfitting.
+                    'n_estimators': [200],  # Number of boosting rounds. More rounds improve performance but can lead to overfitting.
 
-                    'learning_rate': [0.01, 0.1, 0.05],  # Step size for each boosting round. 
+                    'learning_rate': [0.05],  # Step size for each boosting round. 
 
-                    'max_depth': [3, 6],  # Maximum depth of each tree. 
+                    'max_depth': [6],  # Maximum depth of each tree. 
                 },
 
                 "RandomForestClassifier": {
-                    'n_estimators': [50, 100],  # Number of trees in the forest. More trees generally lead to better performance but increase computation time.
+                    'n_estimators': [50],  # Number of trees in the forest. More trees generally lead to better performance but increase computation time.
 
-                    'max_depth': [10, 20],  # Maximum depth of trees. 
+                    'max_depth': [10],  # Maximum depth of trees. 
                 },
 
-                # "SVC": {
-                #     'C': [0.1, 1],  # Regularization strength. Larger values make the decision boundary more complex, smaller values create a smoother boundary.
+                # "RandomForestClassifier": {
+                #     'n_estimators': [100],  # Number of trees in the forest. More trees generally lead to better performance but increase computation time.
 
-                #     'kernel': ['linear', 'rbf'],  # Types of kernels. 
-                # }    
+                #     'max_depth': [20],  # Maximum depth of trees. 
+                # },
             }
 
             logging.info("Entered into evaluate models")

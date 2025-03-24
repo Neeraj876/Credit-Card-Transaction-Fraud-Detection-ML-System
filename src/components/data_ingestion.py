@@ -63,7 +63,7 @@ class DataIngestion:
 
             df.replace({"na":np.nan}, inplace=True)
 
-            df.to_csv("", index=False, header=True)
+            df.to_csv("/mnt/d/real_time_streaming/Notebooks/Dataset/training_features.csv", index=False, header=True)
             
             return df
         

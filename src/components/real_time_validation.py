@@ -20,8 +20,8 @@ logger = logging.getLogger("transaction_validator")
 
 # Configuration
 CONFIG = {
-    "kafka_broker": "3.83.23.236:9092",
-    "schema_registry_url": "http://3.83.23.236:8081",
+    "kafka_broker": "3.83.46.209:9092",
+    "schema_registry_url": "http://3.83.46.209:8081",
     "topics": {
         "input": "raw_transactions",
         "valid": "valid_transactions",

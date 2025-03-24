@@ -13,9 +13,9 @@ from time import sleep
 MONGO_URI = "mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 DATABASE_NAME = "FRAUD"
 COLLECTION_NAME = "creditcardData"
-KAFKA_BROKER = "3.83.23.236:9092"
+KAFKA_BROKER = "3.83.46.209:9092"
 RAW_TOPIC = "raw_transactions"
-SCHEMA_REGISTRY_URL = "http://3.83.23.236:8081"
+SCHEMA_REGISTRY_URL = "http://3.83.46.209:8081"
 SCHEMA_SUBJECT = "raw_transactions-value"
 
 
