@@ -12,6 +12,9 @@ services:
     networks:
       - monitoring  # Ensure it's on the same network as Prometheus
     environment:
+      AWS_ACCESS_KEY_ID: AKIA4ZPZVPTRDLAWQ6EZ
+      AWS_SECRET_ACCESS_KEY: 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
+      AWS_REGION: us-east-1
       FEATURE_REPO_PATH: "/app/my_feature_repo/feature_repo"
       REDIS_URL: "redis://redis:6379"
       MONGO_DB_URL: "mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
