@@ -24,7 +24,6 @@ TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
 PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
 
 
-
 # Set page config
 st.set_page_config(
     page_title="Credit Card Transaction Fraud Detection",
@@ -34,13 +33,19 @@ st.set_page_config(
 )
 
 def create_transaction(transaction_data):
-    """Send transaction data to API and return response"""
-    response = requests.post(
-        TRANSACTION_ENDPOINT,
-        json=transaction_data,
-        headers={"Content-Type": "application/json"}
-    )
-    return response.json()
+    try:
+        """Send transaction data to API and return response"""
+        response = requests.post(
+            TRANSACTION_ENDPOINT,
+            json=transaction_data,
+            headers={"Content-Type": "application/json"}
+            timeout=10  # Add timeout
+        )
+        response.raise_for_status()  # Raise exception for HTTP errors
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"API request failed: {e}")
+        return {"error": str(e)}
 
 # def predict_fraud(transaction_id, event_timestamp=None):
 def predict_fraud(transaction_id):
