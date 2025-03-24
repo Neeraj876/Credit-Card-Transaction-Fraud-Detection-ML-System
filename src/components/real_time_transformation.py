@@ -135,7 +135,7 @@ def send_transaction_to_api(transaction_id, max_retries=3):
             # response = requests.post("http://localhost/api", json=payload)
   
             # Configuration After Deployment
-            response = requests.post("http://34.227.11.162:8000/transaction", json=payload)
+            response = requests.post("http://34.202.237.111:8000/transaction", json=payload)
 
             if response.status_code == 200:
                 logging.info(f"Sent transaction_id {transaction_id} to API successfully.")
