@@ -38,7 +38,7 @@ def create_transaction(transaction_data):
         response = requests.post(
             TRANSACTION_ENDPOINT,
             json=transaction_data,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
             timeout=10  # Add timeout
         )
         response.raise_for_status()  # Raise exception for HTTP errors
