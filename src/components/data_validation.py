@@ -17,6 +17,7 @@ from scipy.stats import ks_2samp
 from evidently.report import Report
 from evidently.metrics import DataDriftTable
 
+
 class DataValidation:
     def __init__(self, data_ingestion_artifact:DataIngestionArtifact, 
     data_validation_config:DataValidationConfig
