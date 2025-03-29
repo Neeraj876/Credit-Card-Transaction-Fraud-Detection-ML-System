@@ -5,7 +5,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
       - fastapi
     networks:
@@ -31,7 +31,7 @@ services:
     container_name: otel-collector
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
-      - ./monitoring/otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - ./observability/otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
       - "4317:4317"  # OTLP gRPC
       - "4318:4318"  # OTLP HTTP
@@ -43,7 +43,7 @@ services:
     image: docker.elastic.co/logstash/logstash:7.17.0
     container_name: logstash
     volumes:
-      - ./monitoring/logstash:/usr/share/logstash/pipeline
+      - ./observability/logstash:/usr/share/logstash/pipeline
     depends_on:
       - elasticsearch
     networks:
@@ -53,7 +53,7 @@ services:
   filebeat:
     image: docker.elastic.co/beats/filebeat:7.17.0
     volumes:
-      - ./monitoring/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     depends_on:
       - logstash
@@ -88,7 +88,7 @@ services:
     image: prom/alertmanager:v0.26.0
     container_name: alertmanager
     volumes:
-      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     ports:
       - "9093:9093"
     networks:
