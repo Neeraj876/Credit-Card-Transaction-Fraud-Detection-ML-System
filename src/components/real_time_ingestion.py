@@ -18,6 +18,7 @@ RAW_TOPIC = "raw_transactions"
 SCHEMA_REGISTRY_URL = "http://34.238.249.151:8081"
 SCHEMA_SUBJECT = "raw_transactions-value"
 
+
 def convert_document(doc):
     """Convert MongoDB document to match Avro schema"""
     
