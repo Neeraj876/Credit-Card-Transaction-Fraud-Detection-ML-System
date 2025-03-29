@@ -19,10 +19,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Grant permissions to files and directories
+      - name: Clean workspace
         run: |
-          sudo chown -R $USER:$USER .
-          sudo chmod -R u+rwx .
+          rm -rf monitoring/alertmanager
 
       - name: Lint code
         run: echo "Linting repository"
@@ -38,11 +37,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
       
-      - name: Grant permissions to files and directories
-        run: |
-          sudo chown -R $USER:$USER .
-          sudo chmod -R u+rwx .
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
