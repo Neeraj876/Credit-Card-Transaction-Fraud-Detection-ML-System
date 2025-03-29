@@ -8,20 +8,43 @@ RUN apt update -y && apt install -y \
     libpq-dev gcc python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install dependencies
-COPY ./streamlit/requirements.txt .
-
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
+# Copy the entire project directory
 COPY . .
+
+# Install dependencies from the requirements file located in the streamlit folder
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r streamlit/requirements.txt
 
 # Expose Streamlit port
 EXPOSE 8501
 
 # Run Streamlit app
-CMD ["streamlit", "run", "streamlit/streamlit.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+CMD ["streamlit", "run", "streamlit/main.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+
+# FROM python:3.10-slim-buster
+
+# # Set working directory
+# WORKDIR /app
+
+# # Install necessary system dependencies
+# RUN apt update -y && apt install -y \
+#     libpq-dev gcc python3-dev \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Copy and install dependencies
+# COPY ./streamlit/requirements.txt .
+
+# RUN pip install --no-cache-dir --upgrade pip && \
+#     pip install --no-cache-dir -r requirements.txt
+
+# # Copy application code
+# COPY . .
+
+# # Expose Streamlit port
+# EXPOSE 8501
+
+# # Run Streamlit app
+# CMD ["streamlit", "run", "streamlit/main.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
 
 # FROM python:3.10-slim-buster
 
@@ -49,10 +72,3 @@ CMD ["streamlit", "run", "streamlit/streamlit.py", "--server.port", "8501", "--s
 # # Run Streamlit app
 # CMD ["streamlit", "run", "streamlit.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
 
-# FROM python:3.10-slim-buster
-# WORKDIR /app
-# COPY requirements.txt .
-# RUN pip install --no-cache-dir -r requirements.txt
-# COPY . .
-# EXPOSE 8501
-# CMD ["streamlit", "run", "streamlit_app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
