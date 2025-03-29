@@ -76,6 +76,7 @@ jobs:
           echo "MONGO_DB_URL=${{ secrets.MONGO_DB_URL }}" >> env-file.txt
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> env-file.txt
           echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> env-file.txt
+          echo "MLFLOW_S3_BUCKET_NAME=${{ secrets.MLFLOW_S3_BUCKET_NAME }}" >> env-file.txt
           echo "FEATURE_REPO_PATH=/app/my_feature_repo/feature_repo" >> env-file.txt
           
           echo "File created at:"
@@ -134,10 +135,10 @@ jobs:
           set +a
 
           echo "Pulling latest Docker images..."
-          docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml pull
+          docker-compose -f docker-compose.yml -f docker-compose.observability.yml pull
 
           echo "Starting services with Docker Compose..."
-          docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d --remove-orphans
+          docker-compose -f docker-compose.yml -f docker-compose.observability.yml -f docker-compose.model-registry.yml up -d --remove-orphans
 
           echo "Cleaning up unused resources..."
           docker image prune -f

@@ -15,7 +15,7 @@ RUN apt update -y && apt install -y \
 RUN pip install --no-cache-dir --upgrade pip
 
 # Copy requirements file
-COPY requirements.txt .
+COPY fastapi/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
@@ -25,10 +25,9 @@ COPY . .
 
 # Set environment variables
 ENV FEATURE_REPO_PATH=/app/my_feature_repo/feature_repo  
-ENV PREPROCESSOR_PATH=/app/final_model/preprocessor.pkl  
 
 # Expose the application port
 EXPOSE 8000
 
 # Run FastAPI app with Uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "fastapi/app:app", "--host", "0.0.0.0", "--port", "8000"]

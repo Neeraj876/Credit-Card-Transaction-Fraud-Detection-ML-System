@@ -2,26 +2,28 @@ from confluent_kafka import Consumer, Producer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 from confluent_kafka.serialization import SerializationContext, MessageField
+from observability.alerts.alert import send_alert_to_elasticsearch, send_alert_to_alertmanager
+from src.logging.otel_logger import logger
 import json
-import logging
+# import logging
 import sys
 import time
 
 # Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("transaction_validator.log"),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-logger = logging.getLogger("transaction_validator")
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     handlers=[
+#         logging.FileHandler("transaction_validator.log"),
+#         logging.StreamHandler(sys.stdout)
+#     ]
+# )
+# logger = logging.getLogger("transaction_validator")
 
 # Configuration
 CONFIG = {
-    "kafka_broker": "3.83.46.209:9092",
-    "schema_registry_url": "http://3.83.46.209:8081",
+    "kafka_broker": "34.238.249.151:9092",
+    "schema_registry_url": "http://34.238.249.151:8081",
     "topics": {
         "input": "raw_transactions",
         "valid": "valid_transactions",
@@ -109,6 +111,7 @@ message_count = 0
 valid_count = 0
 invalid_count = 0
 start_time = time.time()
+last_log_time = start_time
 
 logger.info("Starting message processing loop")
 try:
@@ -116,9 +119,9 @@ try:
         msg = consumer.poll(1.0)
         
         # Print stats every 100 messages
-        if message_count > 0 and message_count % 100 == 0:
-            elapsed = time.time() - start_time
-            logger.info(f"Stats: Processed {message_count} messages ({valid_count} valid, {invalid_count} invalid) in {elapsed:.2f} seconds")
+        # if message_count > 0 and message_count % 100 == 0:
+        #     elapsed = time.time() - start_time
+        #     logger.info(f"Stats: Processed {message_count} messages ({valid_count} valid, {invalid_count} invalid) in {elapsed:.2f} seconds")
         
         if msg is None:
             continue
@@ -161,13 +164,25 @@ try:
                     callback=delivery_report
                 )
                 logger.info(f"Invalid transaction {record.get('trans_num', 'unknown')} sent to invalid_transactions")
-            
+
+                # Send alert to Elasticsearch when validation fails
+                error_message = f"Invalid transaction {record.get('trans_num', 'unknown')} - Invalid amount or missing transaction ID."
+                send_alert_to_elasticsearch(error_message)
+                send_alert_to_alertmanager(error_message)
+                        
             producer.poll(0)  # Trigger delivery reports
+
+            # Calculate records per second (RPS)
+            elapsed_time = time.time() - last_log_time
+            if elapsed_time >= 1.0:  # Log every second
+                rps = message_count / (time.time() - start_time)
+                logger.info(f"Processed {message_count} messages | RPS: {rps:.2f} | Valid: {valid_count} | Invalid: {invalid_count}")
+                last_log_time = time.time()
             
         except Exception as e:
             logger.error(f"Error processing message: {str(e)}", exc_info=True)
     
-    producer.flush()
+        producer.flush()
 
 except KeyboardInterrupt:
     logger.info("Shutting down gracefully...")
@@ -176,7 +191,8 @@ except Exception as e:
 finally:
     # Print final stats
     elapsed = time.time() - start_time
-    logger.info(f"Final stats: Processed {message_count} messages ({valid_count} valid, {invalid_count} invalid) in {elapsed:.2f} seconds")
+    rps = message_count / elapsed if elapsed > 0 else 0
+    logger.info(f"Final stats: Processed {message_count} messages | RPS: {rps:.2f} | Valid: {valid_count} | Invalid: {invalid_count} | Time: {elapsed:.2f}s")
     
     # Clean up resources
     consumer.close()

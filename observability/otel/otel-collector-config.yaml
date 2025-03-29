@@ -1,0 +1,69 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317  # Add explicit endpoint
+      http:
+        endpoint: 0.0.0.0:4318  # Add explicit endpoint
+
+exporters:
+  elasticsearch:
+    endpoints: ["http://elasticsearch:9200"]
+    logs_index: "otel-logs-%Y-%m-%d"  # Add date-based indexing
+    traces_index: "otel-traces-%Y-%m-%d"
+    metrics_index: "otel-metrics-%Y-%m-%d"
+    
+  logging:
+    loglevel: debug
+
+processors:
+  batch:
+    send_batch_size: 100  # Optional: Configure batch size
+    timeout: 10s  # Optional: Set timeout for sending batches
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [elasticsearch, logging]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [elasticsearch, logging]
+
+    metrics:  
+      receivers: [otlp]  # Receive metrics via OTLP
+      processors: [batch]
+      exporters: [elasticsearch, logging]
+      
+# receivers:
+#   otlp:
+#     protocols:
+#       grpc:
+#       http:
+
+# exporters:
+#   elasticsearch:
+#     endpoints: ["http://elasticsearch:9200"]
+#     logs_index: "otel-logs"
+#     traces_index: "otel-traces"
+
+#   logging:
+#     loglevel: debug
+
+# processors:
+#   batch:
+
+# service:
+#   pipelines:
+#     traces:
+#       receivers: [otlp]
+#       processors: [batch]
+#       exporters: [elasticsearch, logging]
+
+#     logs:
+#       receivers: [otlp]
+#       processors: [batch]
+#       exporters: [elasticsearch, logging]

@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit.streamlit as st
 import pandas as pd
 import numpy as np
 import requests
@@ -19,7 +19,7 @@ import plotly.graph_objects as go
 # PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
 
 # Configuration after deployment
-API_ENDPOINT = "http://34.202.237.111:8000"
+API_ENDPOINT = "http://54.175.59.242:8000"
 TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
 PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
 

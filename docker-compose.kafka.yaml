@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Zookeeper service
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    mem_limit: 256m
+    networks:
+      - kafka-net
+
+  # Kafka service
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9093,OUTSIDE://34.238.249.151:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+    mem_limit: 256m   # Reduce from 512m
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka-net
+
+  # Schema Registry service
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9093
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_HEAP_OPTS: "-Xmx128M -Xms64M"
+    mem_limit: 256m
+    depends_on:
+      - kafka
+    networks:
+      - kafka-net
+
+  # Confluent Kafka Exporter service
+  kafka-exporter:
+    image: confluentinc/cp-kafka-exporter:latest
+    container_name: kafka-exporter
+    ports:
+      - "9308:9308"  # Expose the Prometheus scraping port
+    environment:
+      KAFKA_ADVERTISED_LISTENER: PLAINTEXT://kafka:9093  # Kafka advertised listener address
+      KAFKA_BROKER: kafka:9093  # Kafka broker address
+    networks:
+      - kafka-net
+    depends_on:
+      - kafka
+      - schema-registry
+
+networks:
+  kafka-net:
+    driver: bridge

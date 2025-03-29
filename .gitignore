@@ -111,6 +111,11 @@ celerybeat.pid
 
 .Artifacts
 Artifacts/
+test_connection/
+logs/
+Artifacts/
+final_model/
+checkpoint/
 
 # Environments
 .artifact
