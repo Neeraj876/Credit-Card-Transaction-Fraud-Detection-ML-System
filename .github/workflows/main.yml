@@ -16,12 +16,15 @@ jobs:
     name: Continuous Integration
     runs-on: ubuntu-latest
     steps:
+      - name: Clean residual directories
+        run: |
+          echo "Cleaning residual directories..."
+          rm -rf monitoring/alertmanager || true  # Force-clean if exists
+
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Clean workspace
-        run: |
-          rm -rf monitoring/alertmanager
+        with:
+          clean: true
 
       - name: Lint code
         run: echo "Linting repository"
