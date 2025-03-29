@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   mlflow:
-    image: mlflow/mlflow:2.3.1
+    image: ghcr.io/mlflow/mlflow:2.9.2
     container_name: mlflow-server
     depends_on:
       - postgres
