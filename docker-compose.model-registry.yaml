@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   mlflow:
-    image: ghcr.io/mlflow/mlflow:2.9.2
-    container_name: mlflow-server
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile.mlflow
     depends_on:
       - postgres
     ports:
