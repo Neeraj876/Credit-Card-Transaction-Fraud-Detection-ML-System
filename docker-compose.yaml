@@ -16,7 +16,7 @@ services:
       FEATURE_REPO_PATH: "/app/my_feature_repo/feature_repo"
       REDIS_URL: "redis://redis:6379"
       MONGO_DB_URL: "mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-      MLFLOW_TRACKING_URI: "http://ec2-54-167-70-125.compute-1.amazonaws.com:5000/"
+      MLFLOW_TRACKING_URI: "http://ec2-34-229-205-61.compute-1.amazonaws.com:5000/"
       OTLP_ENDPOINT: "http://otel-collector:4317"
 
   streamlit:
