@@ -135,7 +135,7 @@ jobs:
           set +a
 
           echo "Pulling latest Docker images..."
-          docker-compose -f docker-compose.yml -f docker-compose.observability.yml pull
+          docker-compose -f docker-compose.yml -f docker-compose.observability.yml -f docker-compose.model-registry.yml pull
 
           echo "Starting services with Docker Compose..."
           docker-compose -f docker-compose.yml -f docker-compose.observability.yml -f docker-compose.model-registry.yml up -d --remove-orphans
