@@ -66,6 +66,17 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
+      - name: Build, tag, and push MLFlow image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_MLFLOW }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f model_registry/Dockerfile.mlflow .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
       - name: Create deployment config
         run: |
           echo "Creating .env file..."
@@ -135,10 +146,10 @@ jobs:
           set +a
 
           echo "Pulling latest Docker images..."
-          docker-compose -f docker-compose.yaml -f docker-compose.observability.yaml pull
+          docker-compose -f docker-compose.yaml -f docker-compose.observability.yaml -f docker-compose.model_registry.yaml pull
 
           echo "Starting services with Docker Compose..."
-          docker-compose -f docker-compose.yaml -f docker-compose.observability.yaml up -d --remove-orphans
+          docker-compose -f docker-compose.yaml -f docker-compose.observability.yaml -f docker-compose.model_registry.yaml up -d --remove-orphans
 
           echo "Cleaning up unused resources..."
           docker image prune -f

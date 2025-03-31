@@ -1,8 +1,8 @@
 services:
   mlflow:
     build:
-      context: ./mlflow
-      dockerfile: Dockerfile.mlflow
+      context: .
+      dockerfile: model_registry/Dockerfile.mlflow
     depends_on:
       - postgres
     ports:
@@ -11,6 +11,7 @@ services:
       AWS_ACCESS_KEY_ID: AKIA4ZPZVPTRDLAWQ6EZ
       AWS_SECRET_ACCESS_KEY: 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
       AWS_REGION: us-east-1
+      MLFLOW_S3_ENDPOINT_URL: https://s3.us-east-1.amazonaws.com
     command: >
       mlflow server 
       --backend-store-uri postgresql://postgres:neeraj@postgres:5432/mlflow_db

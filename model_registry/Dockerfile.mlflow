@@ -1,0 +1,34 @@
+# Base image
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+        gcc \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install --no-cache-dir \
+    mlflow==2.8.0 \
+    psycopg2-binary \
+    boto3 \
+    sqlalchemy
+
+# Create directory for mlflow
+RUN mkdir -p /mlflow
+
+# Set environment variables
+ENV MLFLOW_S3_ENDPOINT_URL=https://s3.us-east-1.amazonaws.com
+
+# Expose port
+EXPOSE 5000
+
+# The command will be provided by docker-compose
+CMD ["mlflow", "server", "--host", "0.0.0.0"]

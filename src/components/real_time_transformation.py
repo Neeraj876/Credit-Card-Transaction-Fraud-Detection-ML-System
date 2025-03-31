@@ -3,7 +3,8 @@ import json
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json, to_timestamp, month, year, expr, unix_timestamp, when, current_timestamp
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType, DoubleType, FloatType, TimestampType
-from src.logging.logger import logging
+# from src.logging.logger import logging
+from src.logging.otel_logger import logging
 from pyspark.sql.functions import abs, expr, monotonically_increasing_id
 
 import requests
@@ -26,7 +27,7 @@ TRANSACTION_PUSH_SCORE="transaction_push_source"
 # Configuration
 CONFIG = {
     "kafka": {
-        "broker": "34.238.249.151:9092",
+        "broker": "54.210.136.110:9092",
         "topic": "valid_transactions",
     },
     "storage": {
@@ -135,7 +136,7 @@ def send_transaction_to_api(transaction_id, max_retries=3):
             # response = requests.post("http://localhost/api", json=payload)
   
             # Configuration After Deployment
-            response = requests.post("http://54.175.59.242:8000/transaction", json=payload)
+            response = requests.post("http://54.225.25.161:8000/transaction", json=payload)
 
             if response.status_code == 200:
                 logging.info(f"Sent transaction_id {transaction_id} to API successfully.")
