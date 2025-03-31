@@ -146,10 +146,10 @@ jobs:
           set +a
 
           echo "Pulling latest Docker images..."
-          docker-compose -f docker-compose.yaml -f docker-compose.observability.yaml -f docker-compose.model_registry.yaml pull
+          docker-compose -f docker-compose.yaml -f docker-compose.observability.yaml -f docker-compose.model-registry.yaml pull
 
           echo "Starting services with Docker Compose..."
-          docker-compose -f docker-compose.yaml -f docker-compose.observability.yaml -f docker-compose.model_registry.yaml up -d --remove-orphans
+          docker-compose -f docker-compose.yaml -f docker-compose.observability.yaml -f docker-compose.model-registry.yaml up -d --remove-orphans
 
           echo "Cleaning up unused resources..."
           docker image prune -f
