@@ -4,7 +4,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json, to_timestamp, month, year, expr, unix_timestamp, when, current_timestamp
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType, DoubleType, FloatType, TimestampType
 # from src.logging.logger import logging
-from src.logging.otel_logger import logging
+from src.logging.otel_logger import logger
 from pyspark.sql.functions import abs, expr, monotonically_increasing_id
 
 import requests
@@ -27,7 +27,7 @@ TRANSACTION_PUSH_SCORE="transaction_push_source"
 # Configuration
 CONFIG = {
     "kafka": {
-        "broker": "54.210.136.110:9092",
+        "broker": "3.87.22.62:9092",
         "topic": "valid_transactions",
     },
     "storage": {
@@ -46,11 +46,11 @@ CONFIG = {
     "checkpoint": "/mnt/d/real_time_streaming/checkpoint"
 }
 
-logging.info(f"Starting Spark Streaming application with config: {CONFIG}")
+logger.info(f"Starting Spark Streaming application with config: {CONFIG}")
 
 # Ensure checkpoint directory exists
 os.makedirs(CONFIG["checkpoint"], exist_ok=True)
-logging.info(f"Checkpoint directory ensured: {CONFIG['checkpoint']}")
+logger.info(f"Checkpoint directory ensured: {CONFIG['checkpoint']}")
 
 # Define JSON Schema for Kafka messages - updated to match actual incoming data
 schema = StructType([
@@ -84,24 +84,24 @@ def debug_batch(batch_df, batch_id):
     """Debug function to examine incoming data structure"""
     try:
         count = batch_df.count()
-        logging.info(f"Batch {batch_id}: Received {count} records")
+        logger.info(f"Batch {batch_id}: Received {count} records")
         
         if count > 0:
             # Show schema and sample data
-            logging.info(f"Batch {batch_id} Schema:")
+            logger.info(f"Batch {batch_id} Schema:")
             for field in batch_df.schema.fields:
-                logging.info(f"  {field.name}: {field.dataType}")
+                logger.info(f"  {field.name}: {field.dataType}")
             
             # Show sample records
-            logging.info(f"Batch {batch_id} Sample Data:")
+            logger.info(f"Batch {batch_id} Sample Data:")
             sample_rows = batch_df.limit(2).collect()
             for i, row in enumerate(sample_rows):
-                logging.info(f"  Row {i+1}: {row.asDict()}")
+                logger.info(f"  Row {i+1}: {row.asDict()}")
         else:
-            logging.info(f"Batch {batch_id}: Empty batch")
+            logger.info(f"Batch {batch_id}: Empty batch")
             
     except Exception as e:
-        logging.error(f"Error in debug_batch for batch {batch_id}: {str(e)}")
+        logger.error(f"Error in debug_batch for batch {batch_id}: {str(e)}")
 
 # def send_transaction_to_api(transaction_id):
 #     """Function to send the transaction_id to the API endpoint"""
@@ -136,19 +136,19 @@ def send_transaction_to_api(transaction_id, max_retries=3):
             # response = requests.post("http://localhost/api", json=payload)
   
             # Configuration After Deployment
-            response = requests.post("http://54.225.25.161:8000/transaction", json=payload)
+            response = requests.post("http://54.147.208.117:8000/transaction", json=payload)
 
             if response.status_code == 200:
-                logging.info(f"Sent transaction_id {transaction_id} to API successfully.")
+                logger.info(f"Sent transaction_id {transaction_id} to API successfully.")
                 return True  # Success
             else:
-                logging.error(f"⚠️ API failed for transaction_id {transaction_id}, Status: {response.status_code}. Retrying...")
+                logger.error(f"⚠️ API failed for transaction_id {transaction_id}, Status: {response.status_code}. Retrying...")
         except Exception as e:
-            logging.error(f"❌ Error sending transaction_id {transaction_id} to API: {str(e)}")
+            logger.error(f"❌ Error sending transaction_id {transaction_id} to API: {str(e)}")
 
         time.sleep(2)  # Small delay before retry
     
-    logging.error(f"🚨 API permanently failed for transaction_id {transaction_id} after {max_retries} attempts.")
+    logger.error(f"🚨 API permanently failed for transaction_id {transaction_id} after {max_retries} attempts.")
     return False  # Failure
 
 # def send_to_api_partition(iterator):
@@ -164,12 +164,12 @@ def send_to_api_partition(iterator):
 
 def write_to_stores(batch_df, epoch_id):
     if batch_df.isEmpty():
-        logging.info(f"Epoch {epoch_id} - No data to process.")
+        logger.info(f"Epoch {epoch_id} - No data to process.")
         return
 
     try:
         count_before = batch_df.count()
-        logging.info(f"Epoch {epoch_id} - Total rows before filtering: {count_before}")
+        logger.info(f"Epoch {epoch_id} - Total rows before filtering: {count_before}")
         
         # Debug the incoming batch
         debug_batch(batch_df, epoch_id)
@@ -189,7 +189,7 @@ def write_to_stores(batch_df, epoch_id):
         required_columns = ["transaction_id", "cc_num", "amt", "is_fraud", "event_timestamp"]
         available_columns = batch_df.columns
         
-        logging.info(f"Available columns: {available_columns}")
+        logger.info(f"Available columns: {available_columns}")
         
         missing_columns = [col for col in required_columns if col not in available_columns]
         
@@ -200,8 +200,8 @@ def write_to_stores(batch_df, epoch_id):
             missing_columns.remove("event_timestamp")
         
         if missing_columns:
-            logging.error(f"Epoch {epoch_id} - Missing required columns: {missing_columns}")
-            logging.error(f"Available columns: {available_columns}")
+            logger.error(f"Epoch {epoch_id} - Missing required columns: {missing_columns}")
+            logger.error(f"Available columns: {available_columns}")
             return
         
         try:
@@ -222,18 +222,18 @@ def write_to_stores(batch_df, epoch_id):
             )
  
         except Exception as e:
-            logging.error(f"Error during column selection in epoch {epoch_id}: {str(e)}")
+            logger.error(f"Error during column selection in epoch {epoch_id}: {str(e)}")
             # Show schema for debugging
-            logging.error("Available columns and types:")
+            logger.error("Available columns and types:")
             for field in batch_df.schema.fields:
-                logging.error(f"  {field.name}: {field.dataType}")
+                logger.error(f"  {field.name}: {field.dataType}")
             raise
 
-        logging.info(f"Sample event_timestamp: {final_df.select('event_timestamp').first()}")
+        logger.info(f"Sample event_timestamp: {final_df.select('event_timestamp').first()}")
 
 
         count_after = final_df.count()
-        logging.info(f"Epoch {epoch_id} - Writing {count_after} records to PostgreSQL and Redis.")
+        logger.info(f"Epoch {epoch_id} - Writing {count_after} records to PostgreSQL and Redis.")
 
         # Debug the finalized dataframe
         debug_batch(final_df, f"{epoch_id}-final")
@@ -250,8 +250,8 @@ def write_to_stores(batch_df, epoch_id):
         # Write to PostgreSQL (Feast Offline Store)
         try:
             # CRITICAL FIX: Add these logging statements to verify the connection details
-            logging.info(f"Attempting to write to PostgreSQL with URL: {CONFIG['storage']['postgres_url']}")
-            logging.info(f"PostgreSQL table: {CONFIG['storage']['postgres_table']}")
+            logger.info(f"Attempting to write to PostgreSQL with URL: {CONFIG['storage']['postgres_url']}")
+            logger.info(f"PostgreSQL table: {CONFIG['storage']['postgres_table']}")
             
             final_df.write \
                 .format("jdbc") \
@@ -262,15 +262,15 @@ def write_to_stores(batch_df, epoch_id):
                 .option("driver", CONFIG["storage"]["postgres_options"]["driver"]) \
                 .mode("append") \
                 .save()
-            logging.info(f"Epoch {epoch_id} - Successfully wrote to PostgreSQL.")
+            logger.info(f"Epoch {epoch_id} - Successfully wrote to PostgreSQL.")
         except Exception as e:
-            logging.error(f"Error writing to PostgreSQL in epoch {epoch_id}: {str(e)}", exc_info=True)
+            logger.error(f"Error writing to PostgreSQL in epoch {epoch_id}: {str(e)}", exc_info=True)
             # Don't raise here - allow the Redis write to still attempt
 
         # Write to Redis (Feast Online Store) 
         try:
             # logging.info(f"Attempting to write to Redis: {CONFIG['redis']['host']}:{CONFIG['redis']['port']}")
-            logging.info(f"Attempting to write to Feast Online Store (Redis) via Feast API...")
+            logger.info(f"Attempting to write to Feast Online Store (Redis) via Feast API...")
 
             # Convert Spark DataFrame to Pandas (Feast requires Pandas)
             pandas_df = final_df.toPandas()
@@ -288,7 +288,7 @@ def write_to_stores(batch_df, epoch_id):
                 to=PushMode.ONLINE # Explicitly specify ONLINE only 
             )
 
-            logging.info(f"Epoch {epoch_id} - Successfully wrote to Feast Online Store (Redis) Only.")
+            logger.info(f"Epoch {epoch_id} - Successfully wrote to Feast Online Store (Redis) Only.")
             
             # final_df.write \
             #     .format("org.apache.spark.sql.redis") \
@@ -300,19 +300,19 @@ def write_to_stores(batch_df, epoch_id):
             #     .save()
             # logging.info(f"Epoch {epoch_id} - Successfully wrote to Redis.")
         except Exception as e:
-            logging.error(f"Error writing to Feast Online Store in epoch {epoch_id}: {str(e)}", exc_info=True)
+            logger.error(f"Error writing to Feast Online Store in epoch {epoch_id}: {str(e)}", exc_info=True)
 
     except Exception as e:
-        logging.error(f"Error in epoch {epoch_id}: {str(e)}", exc_info=True)
+        logger.error(f"Error in epoch {epoch_id}: {str(e)}", exc_info=True)
         try:
-            logging.error("Showing sample data that caused the error:")
+            logger.error("Showing sample data that caused the error:")
             batch_df.show(5, truncate=False)
         except:
-            logging.error("Could not show sample data due to additional error")
+            logger.error("Could not show sample data due to additional error")
         raise
 
 def main():
-    logging.info("Initializing Spark session")
+    logger.info("Initializing Spark session")
     
     spark = SparkSession.builder \
     .appName("FraudDetectionStreaming") \
@@ -328,7 +328,7 @@ def main():
     # Set log level for Spark itself
     spark.sparkContext.setLogLevel("WARN")
     
-    logging.info(f"Connecting to Kafka topic: {CONFIG['kafka']['topic']}")
+    logger.info(f"Connecting to Kafka topic: {CONFIG['kafka']['topic']}")
     
     # Read from Kafka with extensive error handling
     try:
@@ -341,13 +341,13 @@ def main():
             .option("failOnDataLoss", "false") \
             .load()
         
-        logging.info("Successfully connected to Kafka")
+        logger.info("Successfully connected to Kafka")
         
         # Add a debug stream to examine raw messages first
         raw_query = raw_df \
         .selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)") \
         .writeStream \
-        .foreachBatch(lambda df, id: logging.info(f"Raw Kafka message batch {id}: {df.head(1)}")) \
+        .foreachBatch(lambda df, id: logger.info(f"Raw Kafka message batch {id}: {df.head(1)}")) \
         .trigger(processingTime="10 seconds") \
         .start()
         
@@ -371,12 +371,12 @@ def main():
         # CRITICAL FIX: Add debug query to verify the parsed data structure
         parsed_query = parsed_stream \
             .writeStream \
-            .foreachBatch(lambda df, id: logging.info(f"Parsed data batch {id}: {df.limit(1).columns}")) \
+            .foreachBatch(lambda df, id: logger.info(f"Parsed data batch {id}: {df.limit(1).columns}")) \
             .trigger(processingTime="10 seconds") \
             .start()
         
         # Stream to PostgreSQL & Redis
-        logging.info("Starting stream processing to downstream systems")
+        logger.info("Starting stream processing to downstream systems")
         final_query = parsed_stream.writeStream \
             .foreachBatch(write_to_stores) \
             .outputMode("append") \
@@ -384,16 +384,16 @@ def main():
             .trigger(processingTime="15 seconds") \
             .start()
 
-        logging.info("All streaming queries started. Awaiting termination.")
+        logger.info("All streaming queries started. Awaiting termination.")
         final_query.awaitTermination()
         
     except Exception as e:
-        logging.error(f"Critical error in main process: {str(e)}", exc_info=True)
+        logger.error(f"Critical error in main process: {str(e)}", exc_info=True)
         raise
 
 if __name__ == "__main__":
     try:
-        logging.info("Starting main application")
+        logger.info("Starting main application")
         main()
     except Exception as e:
-        logging.error(f"Application failed: {str(e)}", exc_info=True)
+        logger.error(f"Application failed: {str(e)}", exc_info=True)

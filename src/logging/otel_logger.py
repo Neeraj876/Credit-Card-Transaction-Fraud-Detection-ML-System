@@ -6,11 +6,11 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.log_exporter import OTLPLogExporter
-from opentelemetry.sdk.logs import LoggerProvider, LoggingHandler
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader 
 
 # Load OTLP endpoint from environment variables (better for production)
@@ -41,7 +41,7 @@ logging.basicConfig(
     ],
 )
 
-logging = logging.getLogger("otel-logger")
+logger = logging.getLogger("otel-logger")
 
 # Configure OpenTelemetry Metrics
 metric_exporter = OTLPMetricExporter(endpoint=OTLP_ENDPOINT)
@@ -51,13 +51,13 @@ set_meter_provider(meter_provider)
 
 # Example Usage
 if __name__ == "__main__":
-    logging.info("Application started successfully!")
-    logging.warning("This is a warning message.")
-    logging.error("An error occurred in the system.")
+    logger.info("Application started successfully!")
+    logger.warning("This is a warning message.")
+    logger.error("An error occurred in the system.")
 
     # Example tracing
     with tracer.start_as_current_span("example-operation"):
-        logging.info("Tracing an example operation.")
+        logger.info("Tracing an example operation.")
 
 # import logging
 # import os

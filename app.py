@@ -3,7 +3,6 @@ import os
 import mlflow
 import logging
 import json
-import json
 import numpy as np
 from mlflow.tracking import MlflowClient
 from feast import FeatureStore
@@ -14,7 +13,7 @@ from typing import Union
 
 from src.exception.exception import CreditCardException
 # from src.logging.logger import logger
-from src.logging.otel_logger import logging  # Import logger (initializes OpenTelemetry)
+from src.logging.otel_logger import logger, tracer  # Import logger (initializes OpenTelemetry)
 
 from src.pipeline.training_pipeline import TrainingPipeline
 
@@ -64,10 +63,15 @@ class JsonFormatter(logging.Formatter):
         }
         return json.dumps(log_record)
 
-# Attach JsonFormatter to the logger
-handler = logging.StreamHandler()  # or use logging.FileHandler to write logs to a file
+# # Attach JsonFormatter to the logger
+# handler = logging.StreamHandler()  # or use logging.FileHandler to write logs to a file
+# handler.setFormatter(JsonFormatter())
+# logging.addHandler(handler)
+# Correct way to configure logger:
+log = logging.getLogger()  # Get the root logger or use a specific name
+handler = logging.StreamHandler()
 handler.setFormatter(JsonFormatter())
-logging.addHandler(handler)
+log.addHandler(handler)  # Call addHandler on the logger instance
 
 # Performance Logging Decorator
 def log_performance(func):
@@ -79,7 +83,7 @@ def log_performance(func):
                 REQUEST_COUNT.inc()
                 
                 # Log method entry
-                logging.info(json.dumps({
+                logger.info(json.dumps({
                     "event": f"{func.__name__}_started",
                     "args": str(args),
                     "kwargs": str(kwargs)
@@ -89,7 +93,7 @@ def log_performance(func):
                 result = func(*args, **kwargs)
                 
                 # Log successful execution
-                logging.info(json.dumps({
+                logger.info(json.dumps({
                     "event": f"{func.__name__}_completed",
                     "status": "success"
                 }))
@@ -97,7 +101,7 @@ def log_performance(func):
                 return result
             except Exception as e:
                 # Log error with structured logging
-                logging.error(json.dumps({
+                logger.error(json.dumps({
                     "event": f"{func.__name__}_failed",
                     "error": str(e),
                     "error_type": type(e).__name__
@@ -106,18 +110,23 @@ def log_performance(func):
     return wrapper
 
 
-# OpenTelemetry Tracing Setup
-def setup_opentelemetry_tracing():
-    """
-    Configure OpenTelemetry tracing to export spans to the collector
-    """
-    # Create trace provider
-    trace.set_tracer_provider(TracerProvider())
+# # OpenTelemetry Tracing Setup
+# def setup_opentelemetry_tracing():
+#     """
+#     Configure OpenTelemetry tracing to export spans to the collector
+#     """
+#      # Check if a TracerProvider is already set up
+#     if trace.get_tracer_provider().__class__.__name__ == "TracerProvider":
+#         logger.info("TracerProvider already initialized, skipping setup")
+#         return
     
-    # Setup OTLP exporter to send traces to OpenTelemetry Collector
-    otlp_exporter = OTLPSpanExporter(endpoint="http://otel-collector:4317")
-    span_processor = BatchSpanProcessor(otlp_exporter)
-    trace.get_tracer_provide
+#     # Create trace provider
+#     trace.set_tracer_provider(TracerProvider())
+    
+#     # Setup OTLP exporter to send traces to OpenTelemetry Collector
+#     otlp_exporter = OTLPSpanExporter(endpoint="http://otel-collector:4317")
+#     span_processor = BatchSpanProcessor(otlp_exporter)
+#     trace.get_tracer_provider().add_span_processor(span_processor)
 
 
 # Connect to MongoDB
@@ -140,19 +149,19 @@ async def lifespan(app: FastAPI):
     global model, preprocessor, store
 
     try:
-         # Setup OpenTelemetry tracing
-        setup_opentelemetry_tracing()
+        # # Setup OpenTelemetry tracing
+        # setup_opentelemetry_tracing()
 
         # Initialize Feature Store
         FEATURE_REPO_PATH = os.getenv("FEATURE_REPO_PATH")
         store = FeatureStore(repo_path=FEATURE_REPO_PATH)
-        logging.info(f"Feature store initialized with repo path: {FEATURE_REPO_PATH}")
+        logger.info(f"Feature store initialized with repo path: {FEATURE_REPO_PATH}")
 
 
         # Configure MLflow to use EC2-hosted tracking server
         # remote_tracking_uri = "http://ec2-34-207-207-10.compute-1.amazonaws.com:5000"
         mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-        logging.info(f"MLflow Tracking URI set to: {MLFLOW_TRACKING_URI}")
+        logger.info(f"MLflow Tracking URI set to: {MLFLOW_TRACKING_URI}")
 
         # Load model and preprocessor once at startup
         client = MlflowClient()
@@ -160,19 +169,19 @@ async def lifespan(app: FastAPI):
         # Get information about registered models
         try:
             model_names = [m.name for m in client.search_registered_models()]
-            logging.info(f"✓ Found registered models: {model_names}")
+            logger.info(f"✓ Found registered models: {model_names}")
             
             if 'XGBClassifier' not in model_names or 'feature_preprocessor' not in model_names:
-                logging.info("❌ Error: Required models not found in the registry")
+                logger.info("❌ Error: Required models not found in the registry")
                 missing = []
                 if 'XGBClassifier' not in model_names:
                     missing.append('XGBClassifier')
                 if 'feature_preprocessor' not in model_names:
                     missing.append('feature_preprocessor')
-                logging.info(f" Missing: {', '.join(missing)}")
+                logger.info(f" Missing: {', '.join(missing)}")
                 sys.exit(1)
         except Exception as e:
-            logging.error(f"❌ Failed to retrieve registered models: {str(e)}")
+            logger.error(f"❌ Failed to retrieve registered models: {str(e)}")
             sys.exit(1)
 
         # Get model versions
@@ -183,53 +192,53 @@ async def lifespan(app: FastAPI):
             # Get XGBClassifier versions
             model_versions = client.search_model_versions("name='XGBClassifier'")
             if not model_versions:
-                logging.info("❌ Error: No versions found for XGBClassifier")
+                logger.info("❌ Error: No versions found for XGBClassifier")
                 sys.exit(1)
             
             # Sort by version number (latest first)
             model_versions = sorted(model_versions, key=lambda x: int(x.version), reverse=True)
             model_version = model_versions[0].version
-            logging.info(f"✓ Latest XGBClassifier version: {model_version}")
+            logger.info(f"✓ Latest XGBClassifier version: {model_version}")
             
             # Get preprocessor versions
             preprocessor_versions = client.search_model_versions("name='feature_preprocessor'")
             if not preprocessor_versions:
-                logging.info("❌ Error: No versions found for feature_preprocessor")
+                logger.info("❌ Error: No versions found for feature_preprocessor")
                 sys.exit(1)
             
             # Sort by version number (latest first)
             preprocessor_versions = sorted(preprocessor_versions, key=lambda x: int(x.version), reverse=True)
             preprocessor_version = preprocessor_versions[0].version
-            logging.info(f"✓ Latest feature_preprocessor version: {preprocessor_version}")
+            logger.info(f"✓ Latest feature_preprocessor version: {preprocessor_version}")
         except Exception as e:
-            logging.error(f"❌ Failed to retrieve model versions: {str(e)}")
+            logger.error(f"❌ Failed to retrieve model versions: {str(e)}")
             sys.exit(1)
 
         # Load preprocessor
         try:
-            logging.info("\nLoading feature preprocessor...")
+            logger.info("\nLoading feature preprocessor...")
             preprocessor = mlflow.pyfunc.load_model(f"models:/feature_preprocessor/{preprocessor_version}")
-            logging.info(f"✓ Successfully loaded preprocessor (version {preprocessor_version})")
-            logging.info(f"   Type: {type(preprocessor).__name__}")
+            logger.info(f"✓ Successfully loaded preprocessor (version {preprocessor_version})")
+            logger.info(f"   Type: {type(preprocessor).__name__}")
         except Exception as e:
-            logging.error(f"❌ Failed to load preprocessor: {str(e)}")
+            logger.error(f"❌ Failed to load preprocessor: {str(e)}")
             sys.exit(1)
         
         # Load model
         try:
-            logging.info("\nLoading XGBClassifier model...")
+            logger.info("\nLoading XGBClassifier model...")
             model = mlflow.pyfunc.load_model(f"models:/XGBClassifier/{model_version}")
-            logging.info(f"✓ Successfully loaded model (version {model_version})")
-            logging.info(f"   Type: {type(model).__name__}")
+            logger.info(f"✓ Successfully loaded model (version {model_version})")
+            logger.info(f"   Type: {type(model).__name__}")
         except Exception as e:
-            logging.error(f"❌ Failed to load model: {str(e)}")
+            logger.error(f"❌ Failed to load model: {str(e)}")
             sys.exit(1)
 
         # Yield control back to the app for async startup tasks
         yield
 
     except Exception as e:
-        logging.error(f"Failed to load model: {e}")
+        logger.error(f"Failed to load model: {e}")
         model = None
         preprocessor = None
         yield  # Ensure app can still start even if the model loading fails
@@ -330,7 +339,7 @@ async def train_route():
         train_pipeline.run_pipeline()
 
         # Log training event
-        logging.info(json.dumps({
+        logger.info(json.dumps({
             "event": "model_training_completed",
             "status": "success"
         }))
@@ -338,7 +347,7 @@ async def train_route():
         return Response("Training is successful")
     except Exception as e:
         # Log training failure
-        logging.error(json.dumps({
+        logger.error(json.dumps({
             "event": "model_training_failed",
             "error": str(e)
         }))
@@ -354,43 +363,45 @@ async def create_transaction(transaction: Union[TransactionRequest, SparkTransac
     tracer = trace.get_tracer(__name__)
 
     try:
-        # Prometheus metrics tracking
-        REQUEST_COUNT.inc()
+        with tracer.start_as_current_span("create_transaction"):
 
-        insert_result = None  # Avoid uninitialized reference
+            # Prometheus metrics tracking
+            REQUEST_COUNT.inc()
 
-        # If request is from Spark (contains transaction_id)
-        if isinstance(transaction, SparkTransactionRequest):
-            latest_transaction_id = transaction.dict().get("transaction_id")
-            return {"status": "success", "message": f"Received transaction_id {latest_transaction_id}"}
+            insert_result = None  # Avoid uninitialized reference
 
-        # If request is from Streamlit (TransactionRequest)
-        if isinstance(transaction, TransactionRequest):
+            # If request is from Spark (contains transaction_id)
+            if isinstance(transaction, SparkTransactionRequest):
+                latest_transaction_id = transaction.dict().get("transaction_id")
+                return {"status": "success", "message": f"Received transaction_id {latest_transaction_id}"}
 
-            transaction_dict = transaction.dict()
+            # If request is from Streamlit (TransactionRequest)
+            if isinstance(transaction, TransactionRequest):
 
-            # Ensure all fields are present
-            complete_transaction = ensure_all_fields(transaction_dict)
+                transaction_dict = transaction.dict()
 
-            # Insert into MongoDB
-            insert_result = collection.insert_one(complete_transaction)
+                # Ensure all fields are present
+                complete_transaction = ensure_all_fields(transaction_dict)
 
-            if not latest_transaction_id:
+                # Insert into MongoDB
+                insert_result = collection.insert_one(complete_transaction)
+
+                if not latest_transaction_id:
+                    return {
+                        "status": "error",
+                        "message": "No transaction_id available from Spark yet",
+                        "transaction_id": None
+                    }
+                
                 return {
-                    "status": "error",
-                    "message": "No transaction_id available from Spark yet",
-                    "transaction_id": None
+                    "status": "success",
+                    "message": "Transaction recorded successfully",
+                    "transaction_id": latest_transaction_id,  # Now correctly assigned
+                    "mongodb_id": str(insert_result.inserted_id)
                 }
-            
-            return {
-                "status": "success",
-                "message": "Transaction recorded successfully",
-                "transaction_id": latest_transaction_id,  # Now correctly assigned
-                "mongodb_id": str(insert_result.inserted_id)
-            }
 
     except Exception as e:
-        logging.error(json.dumps({
+        logger.error(json.dumps({
                 "event": "transaction_creation_failed",
                 "error": str(e)
             }))
@@ -435,7 +446,7 @@ async def predict(prediction_request: PredictionRequest):
             entity_rows=entity_rows
         ).to_dict()
 
-        logging.info(f"Fetched feature data: {feature_data}")
+        logger.info(f"Fetched feature data: {feature_data}")
 
         # Explicitly remove 'transaction_id' if it appears in feature_data
         if 'transaction_id' in feature_data:
@@ -468,7 +479,7 @@ async def predict(prediction_request: PredictionRequest):
         #     }}
         # )
 
-        logging.info(json.dumps({
+        logger.info(json.dumps({
                 "event": "fraud_prediction_completed",
                 "transaction_id": prediction_request.transaction_id,
                 "fraud_label": fraud_label
