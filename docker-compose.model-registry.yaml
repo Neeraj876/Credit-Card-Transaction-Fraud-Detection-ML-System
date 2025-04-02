@@ -19,9 +19,11 @@ services:
       --host 0.0.0.0
     restart: unless-stopped
     networks:
-      - monitoring  # Using the same network as existing PostgreSQL service
+      - easymlops_network  # Using the same network as existing PostgreSQL service
 
+# networks:
+#   monitoring:  # Keep the existing network
+#     name: monitoring
 networks:
-  monitoring:  # Keep the existing network
-    name: monitoring
-
+  easymlops_network:
+    external: true

@@ -5,10 +5,10 @@ services:
       dockerfile: Dockerfile.fastapi
     ports:
       - "8000:8000"
-    depends_on:
-      - redis
+    # depends_on:
+    #   - redis
     networks:
-      - monitoring  # Ensure it's on the same network as Prometheus
+      - easymlops_network  
     environment:
       AWS_ACCESS_KEY_ID: AKIA4ZPZVPTRDLAWQ6EZ
       AWS_SECRET_ACCESS_KEY: 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
@@ -16,7 +16,7 @@ services:
       FEATURE_REPO_PATH: "/app/my_feature_repo/feature_repo"
       REDIS_URL: "redis://redis:6379"
       MONGO_DB_URL: "mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-      MLFLOW_TRACKING_URI: "MLFLOW_TRACKING_URI=http://54.147.208.117:5000"
+      MLFLOW_TRACKING_URI: "http://3.80.110.50:5000"
       OTLP_ENDPOINT: "http://otel-collector:4317"
 
   streamlit:
@@ -28,34 +28,11 @@ services:
     depends_on:
       - fastapi
     networks:
-      - monitoring
+      - easymlops_network
 
-  redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - monitoring
-
-  postgres:
-    image: postgres:15
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=neeraj
-      - POSTGRES_DB=feast_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - monitoring
-
-volumes:
-  redis_data:
-  postgres_data:
-
+# networks:
+#   monitoring:
+#     driver: bridge # This creates the network
 networks:
-  monitoring:
-    driver: bridge # This creates the network
+  easymlops_network:
+    name: easymlops_network

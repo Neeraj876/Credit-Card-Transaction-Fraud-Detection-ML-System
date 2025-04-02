@@ -1,0 +1,32 @@
+services:
+  redis:
+    image: redis:7
+    container_name: online-store-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - easymlops_network
+
+  postgres:
+    image: postgres:15
+    container_name: offline-store-redis
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=neeraj
+      - POSTGRES_DB=feast_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - easymlops_network
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  easymlops_network:
+    external: true

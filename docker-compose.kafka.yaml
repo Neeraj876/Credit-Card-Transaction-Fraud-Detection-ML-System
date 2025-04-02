@@ -65,6 +65,12 @@ services:
       - kafka
       - schema-registry
 
+# networks:
+#   kafka-net:
+#     driver: bridge
+# networks:
+#   easymlops_network:
+#     external: true
 networks:
   kafka-net:
-    driver: bridge
+    name: kafka-net

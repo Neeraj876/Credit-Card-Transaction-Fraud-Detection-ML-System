@@ -9,7 +9,7 @@ services:
     depends_on:
       - fastapi
     networks:
-      - monitoring
+      - easymlops_network
 
   grafana:
     image: grafana/grafana:10.1.5 
@@ -23,7 +23,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
-      - monitoring
+      - easymlops_network
 
   ### OPENTELEMETRY COLLECTOR ###
   otel-collector:
@@ -37,7 +37,7 @@ services:
       - "4318:4318"  # OTLP HTTP
       - "9464:9464"  # Prometheus exporter
     networks:
-      - monitoring
+      - easymlops_network
 
   logstash:
     image: docker.elastic.co/logstash/logstash:7.17.0
@@ -47,7 +47,7 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      - monitoring
+      - easymlops_network
 
   ### FILEBEAT ###
   filebeat:
@@ -58,7 +58,7 @@ services:
     depends_on:
       - logstash
     networks:
-      - monitoring
+      - easymlops_network
 
   ### ELASTICSEARCH ###
   elasticsearch:
@@ -70,7 +70,7 @@ services:
     ports:
       - "9200:9200"
     networks:
-      - monitoring
+      - easymlops_network
 
   ### KIBANA ###
   kibana:
@@ -81,7 +81,7 @@ services:
     ports:
       - "5601:5601"
     networks:
-      - monitoring
+      - easymlops_network
 
   ### SLACK ALERTING (ALERTMANAGER) ###
   alertmanager:
@@ -92,12 +92,15 @@ services:
     ports:
       - "9093:9093"
     networks:
-      - monitoring
+      - easymlops_network
 
 volumes:
   grafana_data:
 
+# networks:
+#   monitoring:
+#     name: monitoring
+#   # This connects to the pre-existing network
 networks:
-  monitoring:
-    name: monitoring
-  # This connects to the pre-existing network
+  easymlops_network:
+    external: true

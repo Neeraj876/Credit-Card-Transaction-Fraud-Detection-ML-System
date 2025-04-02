@@ -1,10 +1,11 @@
-# data_ingest.py
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 from confluent_kafka import Producer
 from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroSchema
 from confluent_kafka.schema_registry.avro import AvroSerializer
 from confluent_kafka.serialization import SerializationContext, MessageField
+from fastavro.schema import load_schema
 from bson import ObjectId
 import datetime
 from time import sleep
@@ -13,9 +14,9 @@ from time import sleep
 MONGO_URI = "mongodb+srv://neerajjj6785:Admin123@cluster0.maegd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 DATABASE_NAME = "FRAUD"
 COLLECTION_NAME = "creditcardData"
-KAFKA_BROKER = "3.87.22.62:9092"
+KAFKA_BROKER = "13.218.62.218:9092"
 RAW_TOPIC = "raw_transactions"
-SCHEMA_REGISTRY_URL = "http://3.87.22.62:8081"
+SCHEMA_REGISTRY_URL = "http://13.218.62.218:8081"
 SCHEMA_SUBJECT = "raw_transactions-value"
 
 
@@ -69,7 +70,9 @@ except ServerSelectionTimeoutError:
 
 # Schema Registry Setup
 schema_registry_client = SchemaRegistryClient({"url": SCHEMA_REGISTRY_URL})
+
 try:
+    # Now get the schema for serialization
     schema_response = schema_registry_client.get_latest_version(SCHEMA_SUBJECT)
     avro_serializer = AvroSerializer(schema_registry_client, schema_response.schema.schema_str)
 except Exception as e:
