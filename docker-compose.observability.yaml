@@ -67,8 +67,8 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - xpack.security.enabled=true
-      - ELASTIC_PASSWORD=admin
+      # - xpack.security.enabled=true
+      # - ELASTIC_PASSWORD=admin
     ports:
       - "9200:9200"
     networks:
@@ -78,10 +78,16 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.0
     container_name: kibana
-    depends_on:
-      - elasticsearch
     ports:
       - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      # - ELASTICSEARCH_USERNAME=elastic  # Default username
+      # - ELASTICSEARCH_PASSWORD=admin  
+    # volumes:
+    #   - ./observability/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    depends_on:
+      - elasticsearch
     networks:
       - easymlops_network
 
