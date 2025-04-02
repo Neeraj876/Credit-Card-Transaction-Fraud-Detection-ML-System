@@ -24,6 +24,9 @@ services:
 # networks:
 #   monitoring:  # Keep the existing network
 #     name: monitoring
+# networks:
+#   easymlops_network:
+#     external: true
 networks:
   easymlops_network:
-    external: true
+    name: easymlops_network

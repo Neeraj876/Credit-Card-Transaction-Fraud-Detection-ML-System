@@ -30,9 +30,9 @@ services:
     networks:
       - easymlops_network
 
-# networks:
-#   monitoring:
-#     driver: bridge # This creates the network
 networks:
-  easymlops_network:
-    name: easymlops_network
+  monitoring:
+    driver: bridge # This creates the network
+# networks:
+#   easymlops_network:
+#     name: easymlops_network

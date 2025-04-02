@@ -101,6 +101,9 @@ volumes:
 #   monitoring:
 #     name: monitoring
 #   # This connects to the pre-existing network
+# networks:
+#   easymlops_network:
+#     external: true
 networks:
   easymlops_network:
-    external: true
+    name: easymlops_network
