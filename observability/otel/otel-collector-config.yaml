@@ -9,7 +9,7 @@ receivers:
 exporters:
   elasticsearch:
     endpoints: ["http://elasticsearch:9200"]
-    logs_index: "otel-logs-%Y-%m-%d"  # Add date-based indexing
+    logs_index: "app-logs-%Y-%m-%d" 
     traces_index: "otel-traces-%Y-%m-%d"
     metrics_index: "otel-metrics-%Y-%m-%d"
     

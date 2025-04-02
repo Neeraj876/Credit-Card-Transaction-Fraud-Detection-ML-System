@@ -6,8 +6,8 @@ services:
       - "9090:9090"
     volumes:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    depends_on:
-      - fastapi
+    # depends_on:
+    #   - fastapi
     networks:
       - easymlops_network
 
@@ -27,7 +27,7 @@ services:
 
   ### OPENTELEMETRY COLLECTOR ###
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.96.0
+    image: otel/opentelemetry-collector-contrib:0.98.0
     container_name: otel-collector
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
@@ -67,6 +67,8 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=admin
     ports:
       - "9200:9200"
     networks:
