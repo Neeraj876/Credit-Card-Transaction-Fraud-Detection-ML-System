@@ -1,25 +1,44 @@
 services:
+
+  mlflow-postgres:
+    image: postgres:15
+    container_name: mlflow-postgres
+    ports:
+      - "5433:5432"  
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # - POSTGRES_DB=mlflow_db
+    volumes:
+      - mlflow_postgres_data:/var/lib/postgresql/data
+      - ./model_registry/postgres-mlflow/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    networks:
+      - easymlops_network
+
   mlflow:
     build:
       context: .
       dockerfile: model_registry/Dockerfile.mlflow
     depends_on:
-      - postgres
+      - mlflow-postgres
     ports:
       - "5000:5000"
     environment:
-      AWS_ACCESS_KEY_ID: AKIA4ZPZVPTRDLAWQ6EZ
-      AWS_SECRET_ACCESS_KEY: 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
-      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
       MLFLOW_S3_ENDPOINT_URL: https://s3.us-east-1.amazonaws.com
     command: >
       mlflow server 
-      --backend-store-uri postgresql://postgres:neeraj@postgres:5432/mlflow_db
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@mlflow_postgres:5432/mlflow_db
       --artifacts-destination s3://mlflowtracking233/mlflow-artifacts
       --host 0.0.0.0
     restart: unless-stopped
     networks:
       - easymlops_network  # Using the same network as existing PostgreSQL service
+
+volumes:
+  mlflow_postgres_data:
 
 # networks:
 #   monitoring:  # Keep the existing network

@@ -9,9 +9,8 @@ receivers:
 exporters:
   elasticsearch:
     endpoints: ["http://elasticsearch:9200"]
-    logs_index: "app-logs-%Y-%m-%d" 
+    logs_index: "otel-logs-%Y-%m-%d" 
     traces_index: "otel-traces-%Y-%m-%d"
-    metrics_index: "otel-metrics-%Y-%m-%d"
     
   logging:
     loglevel: debug
@@ -36,7 +35,7 @@ service:
     metrics:  
       receivers: [otlp]  # Receive metrics via OTLP
       processors: [batch]
-      exporters: [elasticsearch, logging]
+      exporters: [logging]
       
 # receivers:
 #   otlp:

@@ -11,15 +11,16 @@ services:
 
   postgres:
     image: postgres:15
-    container_name: offline-store-redis
+    container_name: offline-store-postgres
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=neeraj
-      - POSTGRES_DB=feast_db
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # - POSTGRES_DB=feast_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./my_feature_repo/postgres-feast/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - easymlops_network
 
