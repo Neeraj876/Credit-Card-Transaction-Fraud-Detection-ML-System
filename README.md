@@ -31,7 +31,7 @@ An MLOps pipeline that transforms credit card transaction data into real-time fr
 
 The dataset can be found [here](https://www.kaggle.com/datasets/kartik2112/fraud-detection/data). This dataset contains a simulated credit card transaction dataset containing legitimate and fraud transactions.
 
-The data spans 24 months (January 2019 to December 2020) and covers credit cards of 1000 customers doing transactions with a pool of 800 merchants..
+The data spans 24 months (January 2019 to December 2020) and covers credit cards of 1000 customers doing transactions with a pool of 800 merchants.
 
 ### File Structure
 
