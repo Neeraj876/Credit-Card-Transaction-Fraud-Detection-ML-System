@@ -86,6 +86,8 @@ jobs:
           echo "IMAGE_TAG=${{ github.sha }}" >> env-file.txt
           echo "MONGO_DB_URL=${{ secrets.MONGO_DB_URL }}" >> env-file.txt
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> env-file.txt
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> env-file.txt
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> env-file.txt
           echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> env-file.txt
           echo "MLFLOW_S3_BUCKET_NAME=${{ secrets.MLFLOW_S3_BUCKET_NAME }}" >> env-file.txt
           echo "FEATURE_REPO_PATH=/app/my_feature_repo/feature_repo" >> env-file.txt

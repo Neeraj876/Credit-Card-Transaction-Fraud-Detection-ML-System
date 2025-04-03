@@ -23,7 +23,6 @@ API_ENDPOINT = "http://3.80.110.50:8000"
 TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
 PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
 
-
 # Set page config
 st.set_page_config(
     page_title="Credit Card Transaction Fraud Detection",
