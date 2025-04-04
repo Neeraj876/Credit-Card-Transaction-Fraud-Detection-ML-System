@@ -8,7 +8,7 @@ An MLOps pipeline that transforms credit card transaction data into real-time fr
 
 - [📊 Dataset](#-dataset)
   - [File Structure](#file-structure)
-  - [Modeling: Customer Purchase Prediction](#modeling-credit-card-transaction-fraud-detection)
+  - [Modeling: Credit Card Transaction Fraud Prediction](#modeling-credit-card-transaction-fraud-detection)
 - [🌐 Architecture Overview](#-architecture-overview)
   - [1. Data Pipeline](#1-data-pipeline)
     - [📤 Data Sources](#-data-sources)
@@ -61,7 +61,7 @@ The data spans 24 months (January 2019 to December 2020) and covers credit cards
 | merch_long        | Longitude Location of Merchant                               |
 | is_fraud         | Fraud Flag                                              |
 
-### Modeling: Credit Card Fraud Detection
+### Modeling: Credit Card Transaction Fraud Prediction
 
 The core modeling task is to predict whether a credit card transaction is fraudulent at the moment it is processed.
 
