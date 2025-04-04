@@ -1,6 +1,6 @@
 # Credit Card Transaction Fraud Detection ML System
 
-An MLOps pipeline that transforms credit card transaction data into real-time fraud detection predictions. Built on modern open-source technologies including Kafka, Spark, Ray, and MLflow, this project demonstrates a complete ML lifecycle from data ingestion through model deployment. The system features automated CDC, real-time feature serving, and comprehensive observability.
+An MLOps pipeline that transforms credit card transaction data into real-time fraud predictions. Built on modern open-source technologies including Kafka, Spark, Ray, and MLflow, this project demonstrates a complete ML lifecycle from data ingestion through model deployment. The system features automated CDC, real-time feature serving, and comprehensive observability.
 
 ![Architecture](_assets/credit_card_transaction.png)
 
