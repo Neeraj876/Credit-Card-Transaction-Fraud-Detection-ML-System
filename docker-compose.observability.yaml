@@ -69,9 +69,9 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
-      - cluster.routing.allocation.disk.watermark.flood_stage: 95%
-      - cluster.routing.allocation.disk.watermark.high: 90%
-      - cluster.routing.allocation.disk.watermark.low: 85%
+      - cluster.routing.allocation.disk.watermark.flood_stage=95%
+      - cluster.routing.allocation.disk.watermark.high=90%
+      - cluster.routing.allocation.disk.watermark.low=85%
     ports:
       - "9200:9200"
     networks:
