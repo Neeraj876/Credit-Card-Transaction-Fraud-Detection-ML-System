@@ -1,5 +1,4 @@
 services:
-
   mlflow-postgres:
     image: postgres:15
     container_name: mlflow-postgres
@@ -14,6 +13,11 @@ services:
     volumes:
       - mlflow_postgres_data:/var/lib/postgresql/data
       - ./model_registry/postgres-mlflow/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - easymlops_network
 
@@ -22,7 +26,8 @@ services:
       context: .
       dockerfile: model_registry/Dockerfile.mlflow
     depends_on:
-      - mlflow-postgres
+      mlflow-postgres:
+        condition: service_healthy
     ports:
       - "5000:5000"
     env_file:
@@ -39,17 +44,11 @@ services:
       --host 0.0.0.0
     restart: unless-stopped
     networks:
-      - easymlops_network  # Using the same network as existing PostgreSQL service
+      - easymlops_network
 
 volumes:
   mlflow_postgres_data:
 
-# networks:
-#   monitoring:  # Keep the existing network
-#     name: monitoring
-# networks:
-#   easymlops_network:
-#     external: true
 networks:
   easymlops_network:
     name: easymlops_network
