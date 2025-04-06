@@ -19,7 +19,7 @@ import plotly.graph_objects as go
 # PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
 
 # Configuration after deployment
-API_ENDPOINT = "http://3.80.110.50:8000"
+API_ENDPOINT = "http://18.209.49.134:8000"
 TRANSACTION_ENDPOINT = f"{API_ENDPOINT}/transaction"
 PREDICTION_ENDPOINT = f"{API_ENDPOINT}/predict"
 

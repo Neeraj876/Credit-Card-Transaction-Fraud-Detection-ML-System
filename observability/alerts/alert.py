@@ -5,7 +5,7 @@ from datetime import datetime
 from src.logging.otel_logger import logger
 
 # Initialize Elasticsearch client
-es = Elasticsearch([{'host': '3.80.110.50', 'port': 9200}])
+es = Elasticsearch([{'host': '18.209.49.134', 'port': 9200}])
 
 def send_alert_to_elasticsearch(invalid_data):
 
@@ -27,7 +27,7 @@ def send_alert_to_elasticsearch(invalid_data):
 
 def send_alert_to_alertmanager(alert_message):
     # URL for Alertmanager API
-    alertmanager_url = "http://3.80.110.50:9093/api/v1/alerts"  # Replace with the actual address of Alertmanager
+    alertmanager_url = "http://18.209.49.134:9093/api/v1/alerts"  # Replace with the actual address of Alertmanager
     
     # Prepare the alert data
     alert_data = [

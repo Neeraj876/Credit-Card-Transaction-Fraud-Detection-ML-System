@@ -22,8 +22,8 @@ import time
 
 # Configuration
 CONFIG = {
-    "kafka_broker": "13.218.62.218:9092",
-    "schema_registry_url": "http://13.218.62.218:8081",
+    "kafka_broker": "52.202.96.111:9092",
+    "schema_registry_url": "http://52.202.96.111:8081",
     "topics": {
         "input": "raw_transactions",
         "valid": "valid_transactions",

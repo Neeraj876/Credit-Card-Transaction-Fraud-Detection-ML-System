@@ -18,7 +18,7 @@ services:
       FEATURE_REPO_PATH: "/app/my_feature_repo/feature_repo"
       REDIS_URL: "redis://redis:6379"
       MONGO_DB_URL: ${MONGO_DB_URL}
-      MLFLOW_TRACKING_URI: "http://3.80.110.50:5000"
+      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI}
       OTLP_ENDPOINT: "http://otel-collector:4317"
 
   streamlit:

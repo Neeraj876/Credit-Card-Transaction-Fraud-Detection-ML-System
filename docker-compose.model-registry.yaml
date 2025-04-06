@@ -34,7 +34,7 @@ services:
       MLFLOW_S3_ENDPOINT_URL: https://s3.us-east-1.amazonaws.com
     command: >
       mlflow server 
-      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@mlflow_postgres:5432/mlflow_db
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@mlflow-postgres:5432/mlflow_db
       --artifacts-destination s3://mlflowtracking233/mlflow-artifacts
       --host 0.0.0.0
     restart: unless-stopped
