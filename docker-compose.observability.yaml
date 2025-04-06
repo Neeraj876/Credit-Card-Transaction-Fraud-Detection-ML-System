@@ -46,8 +46,6 @@ services:
   logstash:
     image: docker.elastic.co/logstash/logstash:7.17.16
     container_name: logstash
-    environment:
-      - LS_JAVA_OPTS=-Xms256m -Xmx256m
     volumes:
       - ./observability/logstash/logstash-pipeline.conf:/usr/share/logstash/pipeline/logstash.conf
       -  ./observability/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
