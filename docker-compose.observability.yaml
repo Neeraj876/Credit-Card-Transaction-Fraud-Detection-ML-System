@@ -51,17 +51,17 @@ services:
         condition: service_healthy
     networks:
       - easymlops_network
-    healthcheck:
-      test: ["CMD", "logstash", "-t", "-f", "/usr/share/logstash/pipeline"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    # healthcheck:
+    #   test: ["CMD", "logstash", "-t", "-f", "/usr/share/logstash/pipeline"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
 
   ### FILEBEAT ###
   filebeat:
     image: docker.elastic.co/beats/filebeat:7.17.0
-    user: root
-    privileged: true
+    # user: root
+    # privileged: true
     command: ["/bin/bash", "-c", "chmod go-w /usr/share/filebeat/filebeat.yml && exec filebeat -e"]
     volumes:
       - ./observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
@@ -78,7 +78,7 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
       - cluster.routing.allocation.disk.watermark.flood_stage=95%
       - cluster.routing.allocation.disk.watermark.high=90%
       - cluster.routing.allocation.disk.watermark.low=85%
@@ -95,7 +95,7 @@ services:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 256m
+    mem_limit: 512m
     
 
   ### KIBANA ###
