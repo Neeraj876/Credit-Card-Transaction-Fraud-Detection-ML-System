@@ -12,7 +12,7 @@ services:
       - POSTGRES_DB=mlflow_db
     volumes:
       - mlflow_postgres_data:/var/lib/postgresql/data
-      - ./model_registry/postgres-mlflow/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      # - ./model_registry/postgres-mlflow/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
