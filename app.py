@@ -130,7 +130,7 @@ def log_performance(func):
 
 
 # Connect to MongoDB
-MONGO_DB_URL = os.getenv("MONGO_DB_URL")
+MONGO_DB_URL = os.getenv("MONGO_DB_URL", )
 mongo_client = pymongo.MongoClient(MONGO_DB_URL, tlsCAFile=ca)
 db = mongo_client["FRAUD"]
 collection = db["creditcardData"]
@@ -195,7 +195,7 @@ async def lifespan(app: FastAPI):
                 logger.info("❌ Error: No versions found for XGBClassifier")
                 sys.exit(1)
             
-            
+
             # Sort by version number (latest first)
             model_versions = sorted(model_versions, key=lambda x: int(x.version), reverse=True)
             model_version = model_versions[0].version
