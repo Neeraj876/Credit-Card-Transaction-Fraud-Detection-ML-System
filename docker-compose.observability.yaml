@@ -19,7 +19,6 @@ services:
     depends_on:
       - prometheus
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana_data:/var/lib/grafana
@@ -79,7 +78,7 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
       - cluster.routing.allocation.disk.watermark.flood_stage=95%
       - cluster.routing.allocation.disk.watermark.high=90%
       - cluster.routing.allocation.disk.watermark.low=85%
@@ -96,7 +95,7 @@ services:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 512m
+    mem_limit: 256m
     
 
   ### KIBANA ###
