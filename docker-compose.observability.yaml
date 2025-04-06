@@ -85,8 +85,8 @@ services:
       - cluster.routing.allocation.disk.watermark.flood_stage=95%
       - cluster.routing.allocation.disk.watermark.high=90%
       - cluster.routing.allocation.disk.watermark.low=85%
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
+    # volumes:
+    #   - es_data:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
     networks:
@@ -130,7 +130,7 @@ services:
 
 volumes:
   grafana_data:
-  es_data:
+  # es_data:
 
 # networks:
 #   monitoring:
