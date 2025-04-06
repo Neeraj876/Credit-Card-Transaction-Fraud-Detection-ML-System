@@ -45,7 +45,7 @@ services:
     container_name: logstash
     volumes:
       - ./observability/logstash/logstash-pipeline.conf:/usr/share/logstash/pipeline/logstash.conf
-      -  ./observability/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./observability/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -60,8 +60,8 @@ services:
   ### FILEBEAT ###
   filebeat:
     image: docker.elastic.co/beats/filebeat:7.17.0
-    # user: root
-    # privileged: true
+    user: root
+    privileged: true
     command: ["/bin/bash", "-c", "chmod go-w /usr/share/filebeat/filebeat.yml && exec filebeat -e"]
     volumes:
       - ./observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
