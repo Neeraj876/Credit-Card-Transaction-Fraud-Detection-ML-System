@@ -49,6 +49,9 @@ services:
 volumes:
   mlflow_postgres_data:
 
+# networks:
+#   easymlops_network:
+#     name: easymlops_network
 networks:
   easymlops_network:
-    name: easymlops_network
+    external: true

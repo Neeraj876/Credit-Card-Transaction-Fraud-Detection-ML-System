@@ -36,23 +36,36 @@ services:
       - "4317:4317"  # OTLP gRPC
       - "4318:4318"  # OTLP HTTP
       - "9464:9464"  # Prometheus exporter
+      - "8888:8888"  # Metrics
+      - "13133:13133" # Health check
     networks:
       - easymlops_network
+    
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:7.17.0
+    image: docker.elastic.co/logstash/logstash:7.17.16
     container_name: logstash
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
     volumes:
       - ./observability/logstash/logstash-pipeline.conf:/usr/share/logstash/pipeline/logstash.conf
+      -  ./observability/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
     depends_on:
       elasticsearch:
         condition: service_healthy
     networks:
       - easymlops_network
+    healthcheck:
+      test: ["CMD", "logstash", "-t", "-f", "/usr/share/logstash/pipeline"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   ### FILEBEAT ###
   filebeat:
-    image: docker.elastic.co/beats/filebeat:7.17.0
+    image: docker.elastic.co/beats/filebeat:7.17.16
+    user: root
+    privileged: true
     command: ["/bin/bash", "-c", "chmod go-w /usr/share/filebeat/filebeat.yml && exec filebeat -e"]
     volumes:
       - ./observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
@@ -65,7 +78,7 @@ services:
 
   ### ELASTICSEARCH ###
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.16
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
@@ -73,6 +86,8 @@ services:
       - cluster.routing.allocation.disk.watermark.flood_stage=95%
       - cluster.routing.allocation.disk.watermark.high=90%
       - cluster.routing.allocation.disk.watermark.low=85%
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
     networks:
@@ -91,7 +106,7 @@ services:
 
   ### KIBANA ###
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.0
+    image: docker.elastic.co/kibana/kibana:7.17.16
     container_name: kibana
     ports:
       - "5601:5601"
@@ -121,9 +136,9 @@ volumes:
 #   monitoring:
 #     name: monitoring
 #   # This connects to the pre-existing network
-# networks:
-#   easymlops_network:
-#     external: true
 networks:
   easymlops_network:
-    name: easymlops_network
+    external: true
+# networks:
+#   easymlops_network:
+#     name: easymlops_network

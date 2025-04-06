@@ -30,9 +30,9 @@ volumes:
   redis_data:
   postgres_data:
 
-# networks:
-#   easymlops_network:
-#     external: true
 networks:
   easymlops_network:
-    name: easymlops_network
+    external: true
+# networks:
+#   easymlops_network:
+#     name: easymlops_network
