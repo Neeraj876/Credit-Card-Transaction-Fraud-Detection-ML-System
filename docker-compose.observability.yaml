@@ -45,7 +45,8 @@ services:
     volumes:
       - ./observability/logstash/logstash-pipeline.conf:/usr/share/logstash/pipeline/logstash.conf
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     networks:
       - easymlops_network
 
@@ -68,7 +69,7 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
       - cluster.routing.allocation.disk.watermark.flood_stage=95%
       - cluster.routing.allocation.disk.watermark.high=90%
       - cluster.routing.allocation.disk.watermark.low=85%
@@ -76,11 +77,17 @@ services:
       - "9200:9200"
     networks:
       - easymlops_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search'"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 256m
+    mem_limit: 512m
+    
 
   ### KIBANA ###
   kibana:
@@ -90,12 +97,9 @@ services:
       - "5601:5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      # - ELASTICSEARCH_USERNAME=elastic  # Default username
-      # - ELASTICSEARCH_PASSWORD=admin  
-    # volumes:
-    #   - ./observability/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     networks:
       - easymlops_network
 
