@@ -68,13 +68,19 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      # - xpack.security.enabled=true
-      # - ELASTIC_PASSWORD=admin
+      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - cluster.routing.allocation.disk.watermark.flood_stage: 95%
+      - cluster.routing.allocation.disk.watermark.high: 90%
+      - cluster.routing.allocation.disk.watermark.low: 85%
     ports:
       - "9200:9200"
     networks:
       - easymlops_network
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 256m
 
   ### KIBANA ###
   kibana:
